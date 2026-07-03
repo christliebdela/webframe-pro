@@ -2,24 +2,14 @@
 
 <!--
 <p align="left">
-  <img src="media/vpp-banner.png" width="auto" height="auto" alt="WebFrame Pro Logo">
+  <img src="https://raw.githubusercontent.com/christliebdela/webframe-pro/main/media/vpp-banner.png" width="auto" height="auto" alt="WebFrame Pro Logo">
 </p>
 -->
 
 <p align="left">
-  <img src="resources/screenshot.png" width="100%" height="auto" alt="WebFrame Pro Preview Screenshot">
+  <img src="https://raw.githubusercontent.com/christliebdela/webframe-pro/main/resources/screenshot.png" width="100%" height="auto" alt="WebFrame Pro Preview Screenshot">
 </p>
 
-
-<p align="left">
-  <a href="https://marketplace.visualstudio.com/items?itemName=ChristliebDela.webframe-pro"><img src="https://vsmarketplacebadges.dev/version/ChristliebDela.webframe-pro.svg?style=flat-square&color=000000&labelColor=222222&logo=visual-studio-code" alt="VS Marketplace Version"></a>
-  <a href="https://marketplace.visualstudio.com/items?itemName=ChristliebDela.webframe-pro"><img src="https://vsmarketplacebadges.dev/downloads/ChristliebDela.webframe-pro.svg?style=flat-square&color=000000&labelColor=222222" alt="VS Marketplace Downloads"></a>
-  <a href="https://open-vsx.org/extension/ChristliebDela/webframe-pro"><img src="https://img.shields.io/open-vsx/v/ChristliebDela/webframe-pro?style=flat-square&color=000000&labelColor=222222" alt="Open VSX Version"></a>
-  <a href="https://open-vsx.org/extension/ChristliebDela/webframe-pro"><img src="https://img.shields.io/open-vsx/dt/ChristliebDela/webframe-pro?style=flat-square&color=000000&labelColor=222222" alt="Open VSX Downloads"></a>
-  <a href="https://github.com/christliebdela/webframe-pro/issues"><img src="https://img.shields.io/github/issues/christliebdela/webframe-pro?style=flat-square&color=000000&labelColor=222222" alt="Issues"></a>
-  <a href="https://github.com/christliebdela/webframe-pro/pulls"><img src="https://img.shields.io/github/issues-pr/christliebdela/webframe-pro?style=flat-square&color=000000&labelColor=222222" alt="Pull Requests"></a>
-  <a href="https://github.com/christliebdela/webframe-pro/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue?style=flat-square&labelColor=222222" alt="License"></a>
-</p>
 
 ## The Pain Point
 
