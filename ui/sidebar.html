@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data: blob:; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-src *; connect-src *;">
+    <link rel="stylesheet" href="${styleUri}?v=${nonce}">
+    <title>WebFrame Pro</title>
+</head>
+<body>
+    <!-- Hidden element containing Base64 encoded saved configuration state to avoid JS syntax linter issues and quoting bugs -->
+    <div id="saved-config-data" style="display: none;" data-config="${savedConfigBase64}"></div>
+    
+    <!-- Full-screen transparent backdrop to catch clicks outside dropdowns (bypasses iframe focus capture limitations) -->
+    <div id="popover-backdrop" class="popover-backdrop"></div>
+    
+    <div class="sidebar-container">
+        <!-- Preview Workbench Canvas (Directly inside sidebar, above settings) -->
+        <div class="workbench" id="workbench">
+            <!-- Device Info & Action Bar (overlay) -->
+            <div class="info-bar">
+                <!-- Custom Dropdown Trigger for Device Selection -->
+                <div class="custom-dropdown" id="badge-device-dropdown">
+                    <button class="dropdown-trigger" id="badge-device-trigger">
+                        <span id="badge-device-text">iPhone 16 Pro</span>
+                        <svg class="chevron-icon" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-content" id="badge-device-content">
+                        <!-- JS populated items -->
+                    </div>
+                </div>
+                
+                <!-- Custom Dropdown Trigger for Scale Selection in the top bar -->
+                <div class="custom-dropdown" id="badge-scale-dropdown">
+                    <button type="button" class="badge-trigger" id="badge-scale-trigger" title="Select Viewport Scale">
+                        <span id="badge-scale-text">Scale: 83%</span>
+                        <svg class="chevron-icon" width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-content" id="badge-scale-content">
+                        <div class="dropdown-item" data-value="50">
+                            <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                            <span class="dropdown-item-label">50%</span>
+                        </div>
+                        <div class="dropdown-item" data-value="75">
+                            <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                            <span class="dropdown-item-label">75%</span>
+                        </div>
+                        <div class="dropdown-item" data-value="100">
+                            <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                            <span class="dropdown-item-label">100%</span>
+                        </div>
+                        <div class="dropdown-item" data-value="fit">
+                            <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                            <span class="dropdown-item-label">Fit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Refresh Preview Button -->
+                <button class="info-bar-btn" id="btn-refresh-preview" title="Refresh Page">
+                    <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
+
+                <!-- Device Theme Quick Toggle Button -->
+                <button class="info-bar-btn" id="btn-toggle-theme" title="Toggle Device Theme">
+                    <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+
+                <!-- Device Orientation Quick Toggle Button -->
+                <button class="info-bar-btn" id="btn-toggle-orientation" title="Toggle Device Orientation">
+                    <svg class="orientation-icon" id="orientation-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px; transition: transform 0.2s ease;">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12" y2="18.01"></line>
+                    </svg>
+                </button>
+
+                <!-- Configurations Dropdown Popover -->
+                <div class="custom-dropdown" id="settings-dropdown">
+                    <button class="info-bar-btn" id="btn-toggle-settings" title="Configurations">
+                        <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    </button>
+                    <div class="dropdown-content settings-popover" id="settings-dropdown-content">
+                        <div class="settings-popover-title">Configurations</div>
+                        
+                        <!-- Web Source Segmented Control Tabs -->
+                        <div class="form-group">
+                            <label>Source Server</label>
+                            <div class="tabs-container">
+                                <div class="tabs-list">
+                                    <button type="button" class="tab-btn active" id="tab-localhost">Local Server</button>
+                                    <button type="button" class="tab-btn" id="tab-live">Live URL</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Localhost Panel -->
+                        <div id="popover-localhost-panel" class="source-panel active">
+                            <div class="port-input-row">
+                                <div class="form-group-sub">
+                                    <label>Active Port</label>
+                                    <div class="custom-dropdown form-select-container" id="popover-port-dropdown">
+                                        <button type="button" class="form-select-trigger" id="popover-port-trigger">
+                                            <span id="popover-port-text">Scanning...</span>
+                                            <svg class="chevron-icon" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        </button>
+                                        <div class="dropdown-content form-select-content" id="popover-port-content">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group-sub">
+                                    <label for="popover-custom-port">Custom Port</label>
+                                    <input type="number" id="popover-custom-port" class="form-control" placeholder="e.g. 3000">
+                                </div>
+                            </div>
+                            <div id="popover-no-ports-msg" class="info-text" style="display: none;">No active servers detected.</div>
+                            <button id="popover-refresh-ports-btn" class="btn btn-secondary">Refresh Scan</button>
+                        </div>
+
+                        <!-- Live URL Panel -->
+                        <div id="popover-live-panel" class="source-panel">
+                            <label for="popover-live-url">Live Web URL</label>
+                            <div class="url-input-row">
+                                <input type="text" id="popover-live-url" class="form-control" placeholder="https://example.com" value="https://example.com">
+                                <button type="button" id="popover-go-url-btn" class="btn btn-primary btn-go">Go</button>
+                            </div>
+                        </div>
+                        
+                        <!-- WebFrame Pro Extension Info Footer -->
+                        <div class="webframe-info-footer">
+                            <div class="webframe-info-version">v${version}</div>
+                            <div class="webframe-info-created">Created by <a href="https://github.com/christliebdela" target="_blank">Christlieb Dela</a></div>
+                            <div class="webframe-info-updated">Last updated: ${lastUpdated}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="device-scroll-wrapper">
+                <div class="device-scale-wrapper">
+                    <div id="device-container">
+                        <iframe id="device-viewport" src="about:blank"></iframe>
+                        <div id="device-screen-overlay"></div>
+                    
+                        <!-- Placeholder Logo Overlay (Visible when preview source is idle/empty) -->
+                        <div id="device-placeholder" class="show">
+                            <div class="placeholder-content">
+                                <div class="placeholder-logo-stack">
+                                    <div class="logo-laptop">
+                                        <div class="logo-laptop-bar"></div>
+                                    </div>
+                                    <div class="logo-phone">
+                                        <div class="logo-phone-island"></div>
+                                    </div>
+                                </div>
+                                <div class="placeholder-title">WebFrame Pro</div>
+                                <div class="placeholder-desc">Ready to Preview</div>
+                                <div class="placeholder-tip">Click the <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin:0 2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> gear icon in the toolbar to configure your local port or live URL.</div>
+                            </div>
+                        </div>
+
+                        <!-- Blocked URL Overlay (Visible when iframe is blocked by X-Frame-Options) -->
+                        <div id="device-blocked-screen" class="device-overlay-screen">
+                            <div class="placeholder-content">
+                                <div style="font-size: 20px; margin-bottom: 8px;">⚠️</div>
+                                <div class="placeholder-title" style="color: var(--vscode-errorForeground, #f48771); font-size: 13px; font-weight: 600;">Security Policy Blocked</div>
+                                <div class="placeholder-desc" style="font-size: 11px; margin-top: 6px; padding: 0 16px; line-height: 1.4; opacity: 0.85;">
+                                    <span id="blocked-url-display" style="word-break: break-all; font-weight: 600;"></span> denies embedding via <span id="blocked-reason-display" style="font-family: monospace; font-weight: 600; color: var(--vscode-textLink-foreground);">X-Frame-Options</span>.
+                                </div>
+                                <div class="placeholder-tip" style="font-size: 10px; margin-top: 12px; padding: 0 14px; opacity: 0.65; line-height: 1.3;">
+                                    To inspect this site, run a local development version or deploy it to a server that allows iframe loading.
+                                </div>
+                            </div>
+                        </div>
+                    
+                    <!-- Realistic HTML Status Bar Overlay -->
+                    <div id="device-status-bar" class="theme-auto">
+                        <div class="status-bar-time" id="status-time">9:41</div>
+                        <div class="status-bar-icons">
+                            <div class="status-icon signal-icon">
+                                <span class="sig-bar bar-1"></span>
+                                <span class="sig-bar bar-2"></span>
+                                <span class="sig-bar bar-3"></span>
+                                <span class="sig-bar bar-4"></span>
+                            </div>
+                            <svg class="status-icon wifi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5a0.5 0.5 0 1 1 0 0.1"></path></svg>
+                            <div class="status-icon battery-icon">
+                                <div class="battery-body">
+                                    <div class="battery-level"></div>
+                                </div>
+                                <div class="battery-cap"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Realistic HTML Home Indicator Bar Overlay (gesture bar with frosted container) -->
+                    <div id="device-home-bar" class="device-home-bar">
+                        <div class="home-bar-pill"></div>
+                    </div>
+
+                    <img id="device-frame" src="" alt="" />
+                    </div>
+                </div>
+                
+                <!-- Device specs display right below the mockup -->
+                <div class="device-specs-caption">
+                    <span id="badge-resolution">393x852</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden native select for options DB population & state machines -->
+        <div style="display: none;">
+            <select id="device-select">${deviceOptions}</select>
+            <select id="popover-port-select"></select>
+            <select id="popover-rotation-select">
+                <option value="portrait" selected>Portrait</option>
+                <option value="landscape">Landscape</option>
+            </select>
+            <select id="popover-scale-select">
+                <option value="50">50%</option>
+                <option value="75">75%</option>
+                <option value="100">100%</option>
+                <option value="fit" selected>Fit</option>
+            </select>
+            <select id="popover-statusbar-select">
+                <option value="auto" selected>Auto</option>
+                <option value="light">Light Mode</option>
+                <option value="dark">Dark Mode</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Script to execute controls & mockup drawing locally -->
+    <script nonce="${nonce}">
+        (function() {
+            const vscode = acquireVsCodeApi();
+            
+            // Injected device definitions database
+            const viewportProDevicesDb = JSON.parse('${deviceDataMap}');
+
+            const deviceSelect = document.getElementById('device-select');
+            const tabLocalhost = document.getElementById('tab-localhost');
+            const tabLive = document.getElementById('tab-live');
+            const localhostPanel = document.getElementById('popover-localhost-panel');
+            const livePanel = document.getElementById('popover-live-panel');
+            const portSelect = document.getElementById('popover-port-select');
+            const customPortInput = document.getElementById('popover-custom-port');
+            const liveUrlInput = document.getElementById('popover-live-url');
+            const goUrlBtn = document.getElementById('popover-go-url-btn');
+            const scaleWrapper = document.querySelector('.device-scale-wrapper');
+            const rotationSelect = document.getElementById('popover-rotation-select');
+            const scaleSelect = document.getElementById('popover-scale-select');
+            const statusbarSelect = document.getElementById('popover-statusbar-select');
+            const refreshPortsBtn = document.getElementById('popover-refresh-ports-btn');
+            const noPortsMsg = document.getElementById('popover-no-ports-msg');
+
+            // Mockup preview canvas element bindings
+            const workbench = document.getElementById('workbench');
+            const deviceContainer = document.getElementById('device-container');
+            const deviceViewport = document.getElementById('device-viewport');
+            const deviceBlockedScreen = document.getElementById('device-blocked-screen');
+            const deviceFrame = document.getElementById('device-frame');
+            const badgeResolution = document.getElementById('badge-resolution');
+            const badgeScaleText = document.getElementById('badge-scale-text');
+            
+            // Status bar elements
+            const statusBarEl = document.getElementById('device-status-bar');
+            const statusTimeEl = document.getElementById('status-time');
+            const devicePlaceholder = document.getElementById('device-placeholder');
+
+            // Custom dropdown elements
+            const dropdownTrigger = document.getElementById('badge-device-trigger');
+            const dropdownContent = document.getElementById('badge-device-content');
+            const dropdownText = document.getElementById('badge-device-text');
+            
+            const badgeScaleDropdown = document.getElementById('badge-scale-dropdown');
+            const badgeScaleTrigger = document.getElementById('badge-scale-trigger');
+            const badgeScaleContent = document.getElementById('badge-scale-content');
+
+            // Settings Popover Elements
+            const settingsTrigger = document.getElementById('btn-toggle-settings');
+            const settingsContent = document.getElementById('settings-dropdown-content');
+            const refreshPreviewBtn = document.getElementById('btn-refresh-preview');
+            const themeToggleBtn = document.getElementById('btn-toggle-theme');
+            const orientationToggleBtn = document.getElementById('btn-toggle-orientation');
+            const orientationToggleIcon = document.getElementById('orientation-toggle-icon');
+            const btnBackNav = document.getElementById('btn-back-nav');
+            const btnForwardNav = document.getElementById('btn-forward-nav');
+            const backdropEl = document.getElementById('popover-backdrop');
+
+            // Cache of running proxy ports keyed by target localhost ports
+            const activeProxies = {};
+
+            // Custom Dropdown UI Helpers (Radix / shadcn style)
+            function initCustomDropdown() {
+                dropdownContent.innerHTML = '';
+                
+                const groups = [
+                    {
+                        name: 'Apple iPhone',
+                        keys: ['iphone-16-pro', 'iphone-16', 'iphone-14-promax', 'iphone-12-pro', 'iphone-11', 'iphone-se']
+                    },
+                    {
+                        name: 'Apple iPad',
+                        keys: ['ipad-pro', 'ipad-air', 'ipad-mini']
+                    },
+                    {
+                        name: 'Google Pixel',
+                        keys: ['pixel-9', 'pixel-fold']
+                    },
+                    {
+                        name: 'Samsung Galaxy',
+                        keys: ['galaxy-s25', 'galaxy-s20-ultra', 'galaxy-a55']
+                    },
+                    {
+                        name: 'Other Screens',
+                        keys: ['surface-pro-7', 'nest-hub']
+                    }
+                ];
+
+                groups.forEach(group => {
+                    const header = document.createElement('div');
+                    header.className = 'dropdown-group-header';
+                    header.textContent = group.name;
+                    dropdownContent.appendChild(header);
+
+                    group.keys.forEach(key => {
+                        const dev = viewportProDevicesDb[key];
+                        if (!dev) return;
+
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        item.dataset.value = key;
+                        item.innerHTML = `
+                            <span class="dropdown-item-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </span>
+                            <span class="dropdown-item-label">${dev.metadata.name}</span>
+                        `;
+
+                        item.addEventListener('click', () => {
+                            deviceSelect.value = key;
+                            updatePreview();
+                            closeDropdown();
+                        });
+
+                        dropdownContent.appendChild(item);
+                    });
+                });
+            }
+
+            // Custom Select dropdowns list of closers
+            const customSelectClosers = [];
+            function closeAllCustomSelects() {
+                customSelectClosers.forEach(closer => closer());
+            }
+
+            // Generic setup helper for Radix-style custom select dropdowns
+            function setupCustomSelect(dropdownId, triggerId, textId, contentId, nativeSelectId, defaultValueText) {
+                const dropdown = document.getElementById(dropdownId);
+                const trigger = document.getElementById(triggerId);
+                const textEl = document.getElementById(textId);
+                const content = document.getElementById(contentId);
+                const nativeSelect = document.getElementById(nativeSelectId);
+
+                if (!dropdown || !trigger || !textEl || !content || !nativeSelect) return;
+
+                function toggleMenu(e) {
+                    e.stopPropagation();
+                    const wasShow = content.classList.contains('show');
+                    closeAllCustomSelects(); // Close all other custom dropdowns
+                    closeDropdown(); // Close main device dropdown
+                    
+                    if (!wasShow) {
+                        content.classList.add('show');
+                        dropdown.classList.add('open');
+                        document.addEventListener('click', closeMenuOutside);
+                    }
+                }
+
+                function closeMenu() {
+                    content.classList.remove('show');
+                    dropdown.classList.remove('open');
+                    document.removeEventListener('click', closeMenuOutside);
+                }
+
+                function closeMenuOutside(e) {
+                    if (!content.contains(e.target) && e.target !== trigger) {
+                        closeMenu();
+                    }
+                }
+
+                trigger.addEventListener('click', toggleMenu);
+
+                function updateUiFromNative() {
+                    const activeVal = nativeSelect.value;
+                    let foundText = defaultValueText;
+                    
+                    const items = content.querySelectorAll('.dropdown-item');
+                    items.forEach(item => {
+                        const itemVal = item.dataset.value;
+                        if (itemVal === activeVal) {
+                            item.classList.add('active');
+                            const labelEl = item.querySelector('.dropdown-item-label');
+                            if (labelEl) foundText = labelEl.textContent;
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                    
+                    textEl.textContent = foundText;
+                }
+
+                // Add item click handlers
+                content.addEventListener('click', (e) => {
+                    const item = e.target.closest('.dropdown-item');
+                    if (!item) return;
+                    e.stopPropagation();
+                    nativeSelect.value = item.dataset.value;
+                    nativeSelect.dispatchEvent(new Event('change'));
+                    closeMenu();
+                });
+
+                // Listen to native select changes to keep in sync
+                nativeSelect.addEventListener('change', updateUiFromNative);
+
+                // Initial sync
+                updateUiFromNative();
+
+                // Store closer
+                customSelectClosers.push(closeMenu);
+            }
+
+            // Load saved configuration from backend injection via base64 encoded data attribute
+            const savedConfigDataEl = document.getElementById('saved-config-data');
+            let savedConfig = {};
+            try {
+                if (savedConfigDataEl && savedConfigDataEl.getAttribute('data-config')) {
+                    savedConfig = JSON.parse(atob(savedConfigDataEl.getAttribute('data-config')));
+                }
+            } catch (e) {
+                console.error('Failed to parse saved configuration:', e);
+            }
+
+            // Restore saved configurations on the native selects
+            if (savedConfig.deviceKey) deviceSelect.value = savedConfig.deviceKey;
+            if (savedConfig.rotation) rotationSelect.value = savedConfig.rotation;
+            if (savedConfig.scale) scaleSelect.value = savedConfig.scale;
+            const restoredTheme = savedConfig.deviceTheme || savedConfig.theme;
+            if (restoredTheme) statusbarSelect.value = restoredTheme;
+            if (savedConfig.customPort !== undefined) customPortInput.value = savedConfig.customPort;
+            if (savedConfig.liveUrl !== undefined) liveUrlInput.value = savedConfig.liveUrl;
+            if (savedConfig.selectedPort !== undefined) {
+                window.savedSelectedPort = savedConfig.selectedPort;
+            }
+
+            // Restore active source tab selection
+            const activeTab = savedConfig.activeTab || 'local';
+            if (activeTab === 'live') {
+                tabLocalhost.classList.remove('active');
+                tabLive.classList.add('active');
+                localhostPanel.classList.remove('active');
+                livePanel.classList.add('active');
+            } else {
+                tabLocalhost.classList.add('active');
+                tabLive.classList.remove('active');
+                localhostPanel.classList.add('active');
+                livePanel.classList.remove('active');
+            }
+
+            // Initialize custom selects inside Configurations Popover
+            setupCustomSelect('popover-port-dropdown', 'popover-port-trigger', 'popover-port-text', 'popover-port-content', 'popover-port-select', 'Select Port...');
+            setupCustomSelect('badge-scale-dropdown', 'badge-scale-trigger', 'badge-scale-text', 'badge-scale-content', 'popover-scale-select', 'Scale: Fit');
+
+            // Hardware buttons generator helper
+            function getHardwareButtons(key, w, h) {
+                let html = '';
+                const btnColor = '#2d2d30';
+                const btnStroke = '#4e4e52';
+                
+                if (key.includes('ipad')) {
+                    // Power button on top right
+                    html += `<rect x="${w - 60}" y="-3" width="40" height="3.5" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Up
+                    html += `<rect x="${w}" y="80" width="3.5" height="30" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Down
+                    html += `<rect x="${w}" y="120" width="3.5" height="30" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                } else if (key.includes('iphone') && key !== 'iphone-se') {
+                    // Modern iPhone: Left buttons (Action/Ring, Volume), Right button (Power)
+                    // Ring/Action Switch
+                    html += `<rect x="-3" y="100" width="3.5" height="12" rx="1.5" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Up
+                    html += `<rect x="-3" y="135" width="3.5" height="24" rx="1.5" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Down
+                    html += `<rect x="-3" y="175" width="3.5" height="24" rx="1.5" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Side Power Button (Right)
+                    html += `<rect x="${w}" y="150" width="3.5" height="40" rx="2" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    
+                    // iPhone 16 Camera Control (Bottom Right, slightly recessed)
+                    if (key.includes('iphone-16')) {
+                        html += `<rect x="${w}" y="${h - 220}" width="1.5" height="26" rx="1" fill="#1b1b1d" stroke="#3c3c3e" stroke-width="0.5" />`;
+                    }
+                } else if (key === 'iphone-se') {
+                    // iPhone SE (based on iPhone 8): Left buttons, Right button
+                    // Ring Switch
+                    html += `<rect x="-2.5" y="80" width="3" height="10" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Up
+                    html += `<rect x="-2.5" y="110" width="3" height="16" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Down
+                    html += `<rect x="-2.5" y="140" width="3" height="16" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Power Button (Right)
+                    html += `<rect x="${w}" y="115" width="3" height="30" rx="1.5" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                } else if (key.includes('pixel') || key.includes('galaxy')) {
+                    // Android Phones: All buttons on the right side
+                    // Power Button
+                    html += `<rect x="${w}" y="130" width="3" height="22" rx="1.5" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume Rocker
+                    html += `<rect x="${w}" y="170" width="3" height="45" rx="2" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                } else if (key === 'surface-pro-7') {
+                    // Surface: Top Left Power & Volume
+                    // Power
+                    html += `<rect x="40" y="-3" width="35" height="3.5" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                    // Volume
+                    html += `<rect x="90" y="-3" width="45" height="3.5" rx="1" fill="${btnColor}" stroke="${btnStroke}" stroke-width="0.5" />`;
+                }
+                
+                return html;
+            }
+
+            // Client-side dynamic SVG frame generator to bypass VS Code webview caching & file URI security policies
+            function generateDeviceSVG(key, dev) {
+                const w = dev.width;
+                const h = dev.height;
+                // iPhone SE has square screen corners but highly rounded physical chassis outer edges (36px)
+                const rx = key === 'iphone-se' ? 36 : (dev.borderRadius > 0 ? dev.borderRadius + dev.viewportX : 10);
+                const innerRx = dev.borderRadius;
+
+                // Outer path (clockwise)
+                const outerPath = `M ${rx} 2 h ${w - 2 * rx} a ${rx} ${rx} 0 0 1 ${rx} ${rx} v ${h - 2 * rx - 4} a ${rx} ${rx} 0 0 1 -${rx} ${rx} h -${w - 2 * rx} a ${rx} ${rx} 0 0 1 -${rx} -${rx} v -${h - 2 * rx - 4} a ${rx} ${rx} 0 0 1 ${rx} -${rx} Z`;
+                
+                // Viewport cutout path (counter-clockwise)
+                const vx = dev.viewportX;
+                const vy = dev.viewportY;
+                const vw = dev.viewportWidth;
+                const vh = dev.viewportHeight;
+                const vr = innerRx;
+
+                let innerPath = '';
+                if (vr > 0) {
+                    innerPath = `M ${vx + vr} ${vy} h ${vw - 2 * vr} a ${vr} ${vr} 0 0 1 ${vr} ${vr} v ${vh - 2 * vr} a ${vr} ${vr} 0 0 1 -${vr} ${vr} h -${vw - 2 * vr} a ${vr} ${vr} 0 0 1 -${vr} -${vr} v -${vh - 2 * vr} a ${vr} ${vr} 0 0 1 ${vr} -${vr} Z`;
+                } else {
+                    innerPath = `M ${vx} ${vy} h ${vw} v ${vh} h -${vw} Z`;
+                }
+
+                const mainFramePath = `${outerPath} ${innerPath}`;
+                let hardwareDetails = '';
+                
+                if (key.includes('iphone-16') || key.includes('iphone-14-promax')) {
+                    const islandW = key.includes('pro') ? 115 : 100;
+                    const islandH = 28;
+                    const islandX = (w - islandW) / 2;
+                    const islandY = vy + 12;
+                    hardwareDetails += `
+                        <rect x="${islandX}" y="${islandY}" width="${islandW}" height="${islandH}" rx="14" fill="#000000" />
+                        <circle cx="${islandX + islandW - 20}" cy="${islandY + 14}" r="4" fill="#111113" />
+                    `;
+                } else if (key === 'iphone-11' || key === 'iphone-12-pro') {
+                    const notchW = key === 'iphone-12-pro' ? 140 : 180;
+                    const notchX = (w - notchW) / 2;
+                    const notchY = vy;
+                    
+                    let speakerHtml = '';
+                    if (key === 'iphone-12-pro') {
+                        // Speaker is in the top bezel above the notch
+                        speakerHtml = `<rect x="${w / 2 - 20}" y="3" width="40" height="2" rx="1" fill="#151518" stroke="#333336" stroke-width="0.8" />`;
+                    } else {
+                        // Speaker is inside the notch at the top
+                        speakerHtml = `<rect x="${w / 2 - 20}" y="${notchY + 5}" width="40" height="3.5" rx="1.75" fill="#151518" stroke="#333336" stroke-width="1" />`;
+                    }
+
+                    hardwareDetails += `
+                        <!-- Wide Notch (overlaps 3px into bezel to prevent sub-pixel anti-aliasing white lines) -->
+                        <path d="M ${notchX} ${notchY - 3} v 19 a 14 14 0 0 0 14 14 h ${notchW - 28} a 14 14 0 0 0 14 -14 v -19" fill="#000000" />
+                        ${speakerHtml}
+                        <circle cx="${w / 2 + (key === 'iphone-12-pro' ? 20 : 35)}" cy="${notchY + 16}" r="3.5" fill="#111113" />
+                    `;
+                } else if (key === 'iphone-se') {
+                    hardwareDetails += `
+                        <rect x="${w / 2 - 25}" y="42" width="50" height="4" rx="2" fill="none" stroke="#77777a" stroke-width="1.5" />
+                        <circle cx="${w / 2 - 45}" cy="44" r="4" fill="none" stroke="#77777a" stroke-width="1.5" />
+                        <circle cx="${w / 2}" cy="${h - 45}" r="22" fill="none" stroke="#77777a" stroke-width="1.5" />
+                    `;
+                } else if (key === 'pixel-9' || key === 'galaxy-a55' || key === 'galaxy-s25' || key === 'galaxy-s20-ultra') {
+                    hardwareDetails += `
+                        <circle cx="${w / 2}" cy="${vy + 16}" r="6" fill="#000000" />
+                    `;
+                } else if (key === 'pixel-fold') {
+                    hardwareDetails += `
+                        <line x1="${w / 2}" y1="${vy}" x2="${w / 2}" y2="${vy + vh}" stroke="#555557" stroke-width="1.5" stroke-dasharray="4 4" />
+                    `;
+                }
+
+                const buttonsHtml = getHardwareButtons(key, w, h);
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + 12}" height="${h + 12}" viewBox="-6 -6 ${w + 12} ${h + 12}" fill="none">
+  <path d="${mainFramePath}" fill="#000000" fill-rule="evenodd" />
+  <rect x="1.5" y="1.5" width="${w - 3}" height="${h - 3}" rx="${rx}" fill="none" stroke="#77777a" stroke-width="2" />
+  ${hardwareDetails}
+  ${buttonsHtml}
+</svg>`;
+                return svg;
+            }
+
+            function toggleDropdown(e) {
+                e.stopPropagation();
+                closeSettings(); // close settings popover if open
+                closeAllCustomSelects(); // close inner custom select dropdowns
+                const isOpen = dropdownContent.classList.contains('show');
+                if (isOpen) {
+                    closeDropdown();
+                } else {
+                    dropdownContent.classList.add('show');
+                    document.getElementById('badge-device-dropdown').classList.add('open');
+                    
+                    // Highlight the active item when menu opens
+                    const activeKey = deviceSelect.value;
+                    const items = dropdownContent.querySelectorAll('.dropdown-item');
+                    items.forEach(item => {
+                        if (item.dataset.value === activeKey) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                    
+                    document.addEventListener('click', closeDropdownOutside);
+                }
+            }
+
+
+
+            // Backdrop management helpers
+            function showBackdrop(onClose) {
+                if (!backdropEl) return;
+                backdropEl.style.display = 'block';
+                backdropEl.onclick = (e) => {
+                    e.stopPropagation();
+                    hideBackdrop();
+                    if (onClose) onClose();
+                };
+            }
+
+            function hideBackdrop() {
+                if (backdropEl) backdropEl.style.display = 'none';
+            }
+
+            function closeScaleDropdown() {
+                badgeScaleContent.classList.remove('show');
+                badgeScaleDropdown.classList.remove('open');
+                hideBackdrop();
+            }
+
+            // Scale trigger popover toggle click
+            badgeScaleTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeSettings();
+                closeDropdown();
+                const wasOpen = badgeScaleContent.classList.contains('show');
+                closeAllCustomSelects();
+                if (!wasOpen) {
+                    badgeScaleContent.classList.add('show');
+                    badgeScaleDropdown.classList.add('open');
+                    showBackdrop(closeScaleDropdown);
+                    
+                    const activeVal = scaleSelect.value;
+                    const items = badgeScaleContent.querySelectorAll('.dropdown-item');
+                    items.forEach(item => {
+                        if (item.dataset.value === activeVal) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                } else {
+                    closeScaleDropdown();
+                }
+            });
+            customSelectClosers.push(closeScaleDropdown);
+
+            // Toggle Device Theme directly from top bar quick button
+            themeToggleBtn.addEventListener('click', () => {
+                const currentTheme = statusbarSelect.value;
+                let newTheme = 'dark';
+                
+                if (currentTheme === 'auto') {
+                    const isVsLight = document.body.classList.contains('vscode-light');
+                    newTheme = isVsLight ? 'dark' : 'light';
+                } else {
+                    newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                }
+                
+                statusbarSelect.value = newTheme;
+                statusbarSelect.dispatchEvent(new Event('change'));
+            });
+
+             // Toggle Device Orientation directly from top bar quick button
+             if (orientationToggleBtn) {
+                 orientationToggleBtn.addEventListener('click', () => {
+                     const rotationSelect = document.getElementById('popover-rotation-select');
+                     if (rotationSelect) {
+                         const currentRotation = rotationSelect.value;
+                         const newRotation = currentRotation === 'portrait' ? 'landscape' : 'portrait';
+                         rotationSelect.value = newRotation;
+                         rotationSelect.dispatchEvent(new Event('change'));
+                     }
+                 });
+             }
+
+             // Navigation history click handlers (communicates with proxy-injected navigation script via postMessage)
+             if (btnBackNav) {
+                 btnBackNav.addEventListener('click', () => {
+                     if (deviceViewport && deviceViewport.contentWindow) {
+                         deviceViewport.contentWindow.postMessage('viewport-pro-back', '*');
+                     }
+                 });
+             }
+
+             if (btnForwardNav) {
+                 btnForwardNav.addEventListener('click', () => {
+                     if (deviceViewport && deviceViewport.contentWindow) {
+                         deviceViewport.contentWindow.postMessage('viewport-pro-forward', '*');
+                     }
+                 });
+             }
+
+            function closeDropdown() {
+                dropdownContent.classList.remove('show');
+                document.getElementById('badge-device-dropdown').classList.remove('open');
+                closeAllCustomSelects();
+                hideBackdrop();
+            }
+
+            function toggleDropdown(e) {
+                e.stopPropagation();
+                closeSettings();
+                closeScaleDropdown();
+                closeAllCustomSelects();
+                const isOpen = dropdownContent.classList.contains('show');
+                if (isOpen) {
+                    closeDropdown();
+                } else {
+                    dropdownContent.classList.add('show');
+                    document.getElementById('badge-device-dropdown').classList.add('open');
+                    showBackdrop(closeDropdown);
+                }
+            }
+
+            function toggleSettings(e) {
+                e.stopPropagation();
+                closeDropdown();
+                closeScaleDropdown();
+                closeAllCustomSelects();
+                const isOpen = settingsContent.classList.contains('show');
+                if (isOpen) {
+                    closeSettings();
+                } else {
+                    settingsContent.classList.add('show');
+                    showBackdrop(closeSettings);
+                }
+            }
+
+            function closeSettings() {
+                settingsContent.classList.remove('show');
+                closeAllCustomSelects();
+                hideBackdrop();
+            }
+
+            dropdownTrigger.addEventListener('click', toggleDropdown);
+            settingsTrigger.addEventListener('click', toggleSettings);
+
+            // Reload content using reliable blank source swap
+            refreshPreviewBtn.addEventListener('click', () => {
+                const currentSrc = deviceViewport.src;
+                deviceViewport.src = 'about:blank';
+                setTimeout(() => {
+                    deviceViewport.src = currentSrc;
+                }, 50);
+            });
+
+            // Populate the custom dropdown on load
+            initCustomDropdown();
+
+            // Toggle Source Panels via Segmented Tabs
+            tabLocalhost.addEventListener('click', () => {
+                tabLocalhost.classList.add('active');
+                tabLive.classList.remove('active');
+                localhostPanel.classList.add('active');
+                livePanel.classList.remove('active');
+                updatePreview();
+            });
+
+            tabLive.addEventListener('click', () => {
+                tabLive.classList.add('active');
+                tabLocalhost.classList.remove('active');
+                livePanel.classList.add('active');
+                localhostPanel.classList.remove('active');
+                updatePreview();
+            });
+
+            // Trigger updates instantly when select option changes
+            [deviceSelect, rotationSelect, scaleSelect, statusbarSelect].forEach(elem => {
+                elem.addEventListener('change', updatePreview);
+            });
+
+            portSelect.addEventListener('change', () => {
+                customPortInput.value = '';
+                updatePreview();
+            });
+
+            customPortInput.addEventListener('input', () => {
+                if (customPortInput.value) {
+                    portSelect.value = '';
+                }
+                updatePreview();
+            });
+
+            // Trigger loading when clicking Go button or pressing Enter
+            goUrlBtn.addEventListener('click', updatePreview);
+            liveUrlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updatePreview();
+                }
+            });
+
+            refreshPortsBtn.addEventListener('click', () => {
+                vscode.postMessage({ type: 'refreshPorts' });
+            });
+
+            // Handle window resizing (fluid "Fit" scale updating)
+            window.addEventListener('resize', () => {
+                if (scaleSelect.value === 'fit') {
+                    applyScale();
+                }
+            });
+
+            // Receive message updates from back-end (port scanning logs)
+            window.addEventListener('message', event => {
+                const message = event.data;
+                switch (message.type) {
+                    case 'scanningPorts':
+                        const triggerText = document.getElementById('popover-port-text');
+                        if (triggerText) triggerText.textContent = 'Scanning...';
+                        refreshPortsBtn.classList.add('spinning');
+                        break;
+                    case 'activePorts':
+                        refreshPortsBtn.classList.remove('spinning');
+                        portSelect.innerHTML = '';
+                        const popoverPortContent = document.getElementById('popover-port-content');
+                        popoverPortContent.innerHTML = '';
+                        
+                        const ports = message.ports || [];
+                        if (ports.length === 0) {
+                            portSelect.innerHTML = '<option value="" selected>No servers</option>';
+                            noPortsMsg.style.display = 'block';
+                            
+                            document.getElementById('popover-port-text').textContent = 'No servers';
+                        } else {
+                            noPortsMsg.style.display = 'none';
+                            ports.forEach(port => {
+                                const opt = document.createElement('option');
+                                opt.value = port.toString();
+                                opt.textContent = `localhost:${port}`;
+                                portSelect.appendChild(opt);
+
+                                const item = document.createElement('div');
+                                item.className = 'dropdown-item';
+                                item.dataset.value = port.toString();
+                                item.innerHTML = `
+                                    <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                    <span class="dropdown-item-label">localhost:${port}</span>
+                                `;
+                                popoverPortContent.appendChild(item);
+                            });
+
+                            if (!customPortInput.value) {
+                                if (window.savedSelectedPort && ports.includes(parseInt(window.savedSelectedPort, 10))) {
+                                    portSelect.value = window.savedSelectedPort.toString();
+                                } else {
+                                    portSelect.selectedIndex = 0;
+                                }
+                            }
+                        }
+                        window.savedSelectedPort = null;
+                        
+                        portSelect.dispatchEvent(new Event('change'));
+                        break;
+                    case 'urlHeadersResult':
+                        if (message.url === getUrl()) {
+                            if (message.blocked) {
+                                document.getElementById('blocked-url-display').textContent = message.url;
+                                document.getElementById('blocked-reason-display').textContent = message.reason;
+                                deviceBlockedScreen.classList.add('show');
+                                deviceViewport.style.opacity = '0';
+                                devicePlaceholder.classList.remove('show');
+                            } else {
+                                deviceBlockedScreen.classList.remove('show');
+                                if (getUrl() !== 'about:blank') {
+                                    deviceViewport.style.opacity = '1';
+                                }
+                            }
+                        }
+                        break;
+                    case 'proxyReady':
+                        activeProxies[message.targetPort] = message.proxyPort;
+                        updatePreview();
+                        break;
+                    case 'proxyError':
+                        console.error('Failed to start auth proxy:', message.error);
+                        break;
+                }
+            });
+
+            function getUrl() {
+                const isLocal = tabLocalhost.classList.contains('active');
+                if (isLocal) {
+                    const customPort = customPortInput.value;
+                    if (customPort) {
+                        return `http://localhost:${customPort}`;
+                    }
+                    const selectedPort = portSelect.value;
+                    if (selectedPort) {
+                        return `http://localhost:${selectedPort}`;
+                    }
+                    return 'about:blank'; // default to blank if no server detected yet
+                } else {
+                    let url = liveUrlInput.value.trim();
+                    if (url && !/^https?:\/\//i.test(url)) {
+                        url = 'https://' + url;
+                    }
+                    return url || 'about:blank';
+                }
+            }
+
+            function updatePreview() {
+                const deviceKey = deviceSelect.value;
+                const deviceData = viewportProDevicesDb[deviceKey];
+
+                if (!deviceData) return;
+
+                const metadata = deviceData.metadata;
+                const isLandscape = rotationSelect.value === 'landscape';
+
+                const w = metadata.width;
+                const h = metadata.height;
+                const vx = metadata.viewportX;
+                const vy = metadata.viewportY;
+                const vw = metadata.viewportWidth;
+                const vh = metadata.viewportHeight;
+
+                const setProp = (name, val) => {
+                    deviceContainer.style.setProperty(name, val);
+                    if (scaleWrapper) {
+                        scaleWrapper.style.setProperty(name, val);
+                    }
+                };
+
+                setProp('--device-w', `${w}px`);
+                setProp('--device-h', `${h}px`);
+
+                if (isLandscape) {
+                    setProp('--container-w', `${h}px`);
+                    setProp('--container-h', `${w}px`);
+                    
+                    // Recalculate offsets for landscape mode
+                    const landscapeVx = h - (vy + vh);
+                    const landscapeVy = vx;
+                    setProp('--viewport-x', `${landscapeVx}px`);
+                    setProp('--viewport-y', `${landscapeVy}px`);
+                    setProp('--viewport-w', `${vh}px`);
+                    setProp('--viewport-h', `${vw}px`);
+                    setProp('--frame-rotation', 'rotate(90deg)');
+                } else {
+                    setProp('--container-w', `${w}px`);
+                    setProp('--container-h', `${h}px`);
+                    setProp('--viewport-x', `${vx}px`);
+                    setProp('--viewport-y', `${vy}px`);
+                    setProp('--viewport-w', `${vw}px`);
+                    setProp('--viewport-h', `${vh}px`);
+                    setProp('--frame-rotation', 'rotate(0deg)');
+                }
+
+                const radius = metadata.borderRadius || 0;
+                setProp('--viewport-radius', `${radius}px`);
+                const devRadius = deviceKey === 'iphone-se' ? 36 : (radius > 0 ? radius + metadata.viewportX : 10);
+                setProp('--device-radius', `${devRadius}px`);
+
+                // Set dynamic status bar positioning parameters (hidden in landscape for phones, thinner on tablets)
+                const isIpadOrTablet = deviceKey.includes('ipad') || deviceKey.includes('surface') || deviceKey.includes('nest');
+                const isPhone = !isIpadOrTablet;
+                
+                const sbHeight = (isLandscape && isPhone) ? 0 : (metadata.statusBarHeight || 24);
+                const sbPadding = (isLandscape && isPhone) ? 16 : (metadata.statusBarPadding || 14);
+                const sbFontSize = (isLandscape && isPhone) ? 11 : (metadata.statusBarFontSize || 10);
+                
+                setProp('--status-bar-h', `${sbHeight}px`);
+                setProp('--status-bar-pad', `${sbPadding}px`);
+                setProp('--status-bar-fs', `${sbFontSize}px`);
+
+                // Rotate the orientation toggle icon based on active rotation state
+                if (orientationToggleIcon) {
+                    if (isLandscape) {
+                        orientationToggleIcon.style.transform = 'rotate(90deg)';
+                    } else {
+                        orientationToggleIcon.style.transform = 'rotate(0deg)';
+                    }
+                }
+
+                // Display dynamic time format
+                statusTimeEl.textContent = deviceKey.includes('ipad') ? '9:41 AM' : '9:41';
+
+                // Set orientation, form-factor and theme attributes
+                const sbTheme = statusbarSelect.value;
+                deviceContainer.setAttribute('data-device-theme', sbTheme);
+                deviceContainer.setAttribute('data-is-landscape', isLandscape.toString());
+                deviceContainer.setAttribute('data-is-phone', isPhone.toString());
+
+                // Set status bar theme class (fallback/transition styling helper)
+                statusBarEl.className = '';
+                statusBarEl.classList.add(`theme-${sbTheme}`);
+
+                // Update theme quick toggle button icon dynamically
+                if (themeToggleBtn) {
+                    const activeLight = sbTheme === 'light' || (sbTheme === 'auto' && document.body.classList.contains('vscode-light'));
+                    if (activeLight) {
+                        themeToggleBtn.innerHTML = `
+                            <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        `;
+                        themeToggleBtn.title = "Switch to Dark Theme";
+                    } else {
+                        themeToggleBtn.innerHTML = `
+                            <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                        `;
+                        themeToggleBtn.title = "Switch to Light Theme";
+                    }
+                }
+
+                const svgContent = generateDeviceSVG(deviceKey, metadata);
+                const dataUri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+                if (deviceFrame.src !== dataUri) {
+                    deviceFrame.src = dataUri;
+                }
+
+                applyScale();
+
+                const targetUrl = getUrl();
+                let iframeUrl = targetUrl;
+                let isLocalhostUrl = false;
+                let targetPort = null;
+
+                if (targetUrl !== 'about:blank') {
+                    try {
+                        const urlObj = new URL(targetUrl);
+                        if (urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
+                            isLocalhostUrl = true;
+                            targetPort = parseInt(urlObj.port || (urlObj.protocol === 'https:' ? '443' : '80'), 10);
+                        }
+                    } catch (e) { /* ignore */ }
+                }
+
+                if (isLocalhostUrl && targetPort) {
+                    const proxyPort = activeProxies[targetPort];
+                    if (proxyPort) {
+                        // Load through local proxy (which rewrites Set-Cookie headers for SameSite support)
+                        iframeUrl = `http://localhost:${proxyPort}`;
+                    } else {
+                        // Request proxy to start, load about:blank in the meantime
+                        vscode.postMessage({ type: 'startProxy', port: targetPort });
+                        iframeUrl = 'about:blank';
+                    }
+                }
+
+                const isLocalUrl = iframeUrl === 'about:blank'
+                    || iframeUrl.includes('localhost')
+                    || iframeUrl.includes('127.0.0.1')
+                    || iframeUrl.startsWith('file://');
+
+                // Localhost/local dev: remove sandbox so cookies, sessions and HMR function fully.
+                // External URLs: apply sandbox for iframe security.
+                if (isLocalUrl) {
+                    deviceViewport.removeAttribute('sandbox');
+                } else {
+                    deviceViewport.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
+                }
+
+                if (iframeUrl === 'about:blank') {
+                    devicePlaceholder.classList.add('show');
+                    deviceViewport.style.opacity = '0';
+                    deviceBlockedScreen.classList.remove('show');
+                } else {
+                    devicePlaceholder.classList.remove('show');
+
+                    if (!isLocalUrl) {
+                        vscode.postMessage({ type: 'checkUrlHeaders', url: iframeUrl });
+                    } else {
+                        deviceBlockedScreen.classList.remove('show');
+                        deviceViewport.style.opacity = '1';
+                    }
+                }
+
+                const currentNormalized = deviceViewport.src.replace(/\/$/, "");
+                const targetNormalized = iframeUrl.replace(/\/$/, "");
+                if (currentNormalized !== targetNormalized) {
+                    deviceViewport.src = iframeUrl;
+                }
+
+                const displayWidth = isLandscape ? vh : vw;
+                const displayHeight = isLandscape ? vw : vh;
+                dropdownText.textContent = metadata.name;
+                badgeResolution.textContent = `${displayWidth}x${displayHeight}`;
+                // Set home gesture indicator bar visibility dynamically
+                const noHomeBarKeys = ['iphone-se', 'surface-pro-7', 'nest-hub'];
+                const hasHomeBar = !noHomeBarKeys.includes(deviceKey);
+                deviceContainer.setAttribute('data-has-home-bar', hasHomeBar.toString());
+
+                saveCurrentConfig();
+            }
+
+            function applyScale() {
+                const deviceKey = deviceSelect.value;
+                const deviceData = viewportProDevicesDb[deviceKey];
+                if (!deviceData) return;
+
+                const metadata = deviceData.metadata;
+                const scaleMode = scaleSelect.value;
+                const isLandscape = rotationSelect.value === 'landscape';
+                let scaleFactor = 1.0;
+
+                if (scaleMode === 'fit') {
+                    const padW = 24;
+                    const padH = 140; // spacing allowance for header and details panel
+                    const benchW = Math.max(100, workbench.clientWidth - padW);
+                    const benchH = Math.max(100, workbench.clientHeight - padH);
+
+                    const targetW = isLandscape ? metadata.height : metadata.width;
+                    const targetH = isLandscape ? metadata.width : metadata.height;
+
+                    const scaleX = benchW / targetW;
+                    const scaleY = benchH / targetH;
+                    
+                    // Allow scaling down to fit narrow sidebars, capping max zoom at 1.0x
+                    scaleFactor = Math.min(scaleX, scaleY, 1.0);
+                } else {
+                    scaleFactor = parseInt(scaleMode, 10) / 100;
+                }
+
+                if (scaleWrapper) {
+                    scaleWrapper.style.setProperty('--device-scale', scaleFactor);
+                }
+                deviceContainer.style.setProperty('--device-scale', scaleFactor);
+                if (badgeScaleText) {
+                    badgeScaleText.textContent = `Scale: ${Math.round(scaleFactor * 100)}%`;
+                }
+            }
+
+            function saveCurrentConfig() {
+                const configState = {
+                    deviceKey: deviceSelect.value,
+                    rotation: rotationSelect.value,
+                    scale: scaleSelect.value,
+                    deviceTheme: statusbarSelect.value,
+                    theme: statusbarSelect.value,
+                    activeTab: tabLocalhost.classList.contains('active') ? 'local' : 'live',
+                    customPort: customPortInput.value,
+                    liveUrl: liveUrlInput.value,
+                    selectedPort: portSelect.value
+                };
+                vscode.postMessage({
+                    type: 'saveConfig',
+                    config: configState
+                });
+            }
+
+            // Sync status bar color dynamically with webpage background
+            function syncStatusBarColor() {
+                try {
+                    const iframeWindow = deviceViewport.contentWindow;
+                    if (!iframeWindow) return;
+                    const iframeDoc = iframeWindow.document;
+                    if (!iframeDoc || !iframeDoc.body) return;
+
+                    const bodyStyle = iframeWindow.getComputedStyle(iframeDoc.body);
+                    const bg = bodyStyle.backgroundColor;
+                    
+                    // Set status bar background color to match webpage body
+                    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                        statusBarEl.style.backgroundColor = bg;
+                        
+                        // Parse RGB components to compute contrast brightness (YIQ formula)
+                        const rgb = bg.match(/\d+/g);
+                        if (rgb && rgb.length >= 3) {
+                            const r = parseInt(rgb[0], 10);
+                            const g = parseInt(rgb[1], 10);
+                            const b = parseInt(rgb[2], 10);
+                            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                            const isDark = yiq < 128;
+                            statusBarEl.style.color = isDark ? '#ffffff' : '#000000';
+                        }
+                    }
+                } catch (e) {
+                    // Cross-origin secure fallback: use VS Code editor themes
+                    statusBarEl.style.backgroundColor = '';
+                    statusBarEl.style.color = '';
+                }
+            }
+
+            // Sync background colors on load
+            deviceViewport.addEventListener('load', () => {
+                syncStatusBarColor();
+            });
+            setInterval(syncStatusBarColor, 600);
+
+            // Initialize preview on first load
+            updatePreview();
+
+            // Signal to backend that we are ready to receive the active port list
+            vscode.postMessage({ type: 'ready' });
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "webframe-pro",
+  "displayName": "WebFrame Pro",
+  "description": "Real mobile device previews directly inside your IDE.",
+  "version": "0.0.1",
+  "publisher": "christlieb-dela",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "webframe-pro-explorer",
+          "title": "WebFrame Pro",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "webframe-pro-explorer": [
+        {
+          "type": "webview",
+          "id": "webframe-pro-sidebar",
+          "name": ""
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "webframe-pro.openPreview",
+        "title": "WebFrame Pro: Open Preview"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

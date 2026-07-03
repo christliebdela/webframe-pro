@@ -1,0 +1,23 @@
+# Dependency directory
+node_modules/
+
+# Compilation output
+out/
+
+# VS Code test workspace
+.vscode-test/
+
+# Packaged extension binaries
+*.vsix
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Dynamically generated device frame assets (created on extension startup)
+assets/devices/
