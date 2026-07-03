@@ -251,6 +251,9 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
         const styleUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'ui', 'sidebar.css')
         );
+        const logoUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'resources', 'logo.png')
+        );
         
         // Generate nonce
         const nonce = getNonce();
@@ -299,6 +302,7 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
         // Replace content placeholders globally
         html = html
             .replace(/\${styleUri}/g, styleUri.toString())
+            .replace(/\${logoUri}/g, logoUri.toString())
             .replace(/\${nonce}/g, nonce)
             .replace(/\${deviceOptions}/g, deviceOptions)
             .replace(/\${deviceDataMap}/g, JSON.stringify(deviceDataMap))
