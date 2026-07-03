@@ -7,7 +7,7 @@
 -->
 
 <p align="left">
-  <img src="https://raw.githubusercontent.com/christliebdela/webframe-pro/main/resources/screenshot.png" width="100%" height="auto" alt="WebFrame Pro Preview Screenshot">
+  <img src="resources/screenshot.png" width="100%" height="auto" alt="WebFrame Pro Preview Screenshot">
 </p>
 
 
