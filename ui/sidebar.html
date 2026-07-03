@@ -98,7 +98,7 @@
                             <div class="tabs-container">
                                 <div class="tabs-list">
                                     <button type="button" class="tab-btn active" id="tab-localhost">Local Server</button>
-                                    <button type="button" class="tab-btn" id="tab-live">Live URL</button>
+                                    <!-- <button type="button" class="tab-btn" id="tab-live">Live URL</button> -->
                                 </div>
                             </div>
                         </div>
@@ -127,7 +127,7 @@
                             <button id="popover-refresh-ports-btn" class="btn btn-secondary">Refresh Scan</button>
                         </div>
 
-                        <!-- Live URL Panel -->
+                        <!-- Live URL Panel (Hidden temporarily)
                         <div id="popover-live-panel" class="source-panel">
                             <label for="popover-live-url">Live Web URL</label>
                             <div class="url-input-row">
@@ -135,6 +135,7 @@
                                 <button type="button" id="popover-go-url-btn" class="btn btn-primary btn-go">Go</button>
                             </div>
                         </div>
+                        -->
                         
                         <!-- WebFrame Pro Extension Info Footer -->
                         <div class="webframe-info-footer">
@@ -801,21 +802,25 @@
             initCustomDropdown();
 
             // Toggle Source Panels via Segmented Tabs
-            tabLocalhost.addEventListener('click', () => {
-                tabLocalhost.classList.add('active');
-                tabLive.classList.remove('active');
-                localhostPanel.classList.add('active');
-                livePanel.classList.remove('active');
-                updatePreview();
-            });
+            if (tabLocalhost) {
+                tabLocalhost.addEventListener('click', () => {
+                    tabLocalhost.classList.add('active');
+                    if (tabLive) tabLive.classList.remove('active');
+                    if (localhostPanel) localhostPanel.classList.add('active');
+                    if (livePanel) livePanel.classList.remove('active');
+                    updatePreview();
+                });
+            }
 
-            tabLive.addEventListener('click', () => {
-                tabLive.classList.add('active');
-                tabLocalhost.classList.remove('active');
-                livePanel.classList.add('active');
-                localhostPanel.classList.remove('active');
-                updatePreview();
-            });
+            if (tabLive) {
+                tabLive.addEventListener('click', () => {
+                    tabLive.classList.add('active');
+                    if (tabLocalhost) tabLocalhost.classList.remove('active');
+                    if (livePanel) livePanel.classList.add('active');
+                    if (localhostPanel) localhostPanel.classList.remove('active');
+                    updatePreview();
+                });
+            }
 
             // Trigger updates instantly when select option changes
             [deviceSelect, rotationSelect, scaleSelect, statusbarSelect].forEach(elem => {
@@ -835,13 +840,15 @@
             });
 
             // Trigger loading when clicking Go button or pressing Enter
-            goUrlBtn.addEventListener('click', updatePreview);
-            liveUrlInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    updatePreview();
-                }
-            });
+            if (goUrlBtn) goUrlBtn.addEventListener('click', updatePreview);
+            if (liveUrlInput) {
+                liveUrlInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        updatePreview();
+                    }
+                });
+            }
 
             refreshPortsBtn.addEventListener('click', () => {
                 vscode.postMessage({ type: 'refreshPorts' });
