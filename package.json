@@ -4,6 +4,10 @@
   "description": "Real mobile device previews directly inside your IDE.",
   "version": "0.0.1",
   "publisher": "ChristliebDela",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/christliebdela/webframe-pro.git"
+  },
   "icon": "resources/icon.png",
   "license": "GPL-3.0-or-later",
   "engines": {
