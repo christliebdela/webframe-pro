@@ -1,9 +1,53 @@
 # Changelog
 
+> [!NOTE]
+> WebFrame Pro is under active development. Updates, improvements, and bug fixes are released regularly as the extension continues to evolve.
+>
+> If you encounter an issue or have a suggestion, please open an issue or submit a pull request on [GitHub](https://github.com/christliebdela/webframe-pro). Your feedback and contributions are always appreciated.
+
+
 ## 0.0.3
+
+### Added
+- **Built-in Static File Server (Go Live)**: Implemented an embedded HTTP static server that automatically hosts plain HTML/CSS projects on a random pre-allocated port directly from the workspace. It features:
+  - **Live Reload & Auto-Save Support**: Integrated a recursive workspace file watcher and Server-Sent Events (SSE) `/vpp-live-reload` endpoint to auto-refresh previews on file saves, using a 100ms debounce buffer to fully support Auto Save.
+  - **"Go Live" Action Cards/Buttons**: Added action cards in the configuration popover and a "Host Project (Go Live)" button on the server unreachable overlay for instant one-click hosting.
+- **"Server Unreachable" Overlay**: Added a high-contrast real-time error overlay inside the device simulator when target ports are inactive, providing customized troubleshooting guides for Node/Vite, PHP, Python, and static HTML/CSS.
+- **"Connecting..." UI Overlay**: Added a dedicated loading overlay with a progress spinner that triggers during port reachability checks to eliminate blank screens.
+- **Active File Tracking**: Integrated active editor tracking to automatically route active HTML/PHP file paths to the preview viewport when switching files.
+- **Smart Dev-Server Launcher**: Added a "Start Dev Server" button on the unreachable overlay that automatically detects `package.json` dev scripts and opens a VS Code terminal.
+- **Custom shadcn/ui Tooltips**: Built custom, premium floating tooltips (featuring dark styling, borders, subtle shadows, and fade/scale transitions) for all main control and configuration buttons.
+- **Startup Splash Screen**: Introduced a "Ready to Preview" splash screen state (`isPreviewStarted`) to prevent auto-starting server/proxy connections or displaying errors on initial boot.
+- **Active Session Management**: Added a compact session status display and "Stop Session" button inside the configuration popover for active static server instances.
+
+### Changed & Improved
+- **Top-Bar Configurations Popover Clean-up**:
+  - Removed the "Configurations" header, "Server Type" block, and descriptive subtitle text in the port scanner footer.
+  - Replaced interactive source tabs with a static, styled "Local Server" status badge.
+  - Stacked the Active Port dropdown and Custom Port input field vertically at 100% width.
+  - Converted the Active Ports dropdown into an inline, scrollable list directly visible in the panel.
+  - Increased the scan refresh button height to 24px and left-aligned the popover's info footer.
+- **Toolbar Refreshes & Theme Toggle**:
+  - Rewired the circular toolbar refresh button to wipe global configurations and force-reload the webview itself, updating the tooltip to "Reload Extension".
+  - Re-bound the Theme Toggle to update the preview directly.
+- **IDE Background & Status Bar Integration**:
+  - Integrated the VS Code variable `var(--vscode-sideBar-background)` for the simulator canvas background to blend seamlessly with the IDE theme.
+  - Implemented dynamic status bar color syncing using postMessage background color tracking, matching the status bar background and text contrast with the body/html background of the webpage.
+  - Changed the status bar battery level to a realistic partial fill of 75%.
+- **Custom Port Input UX**:
+  - Wrapped Custom Port with a "Launch" button and disabled browser input spinners.
+  - Restricted launching to explicit button clicks or pressing "Enter" rather than triggering page reloads while typing.
+- **Configuration Panel Simplification**: Consolidated settings into a single card and removed icons from "Launch" and "Host Project (Go Live)" buttons for a cleaner aesthetic.
+- **On-Demand Port Scanning**: Defaulted the active ports placeholder to manual scanning ("Click ↻ to scan active ports") and automatically triggers a port scan when clicking/opening the settings gear icon.
+- **Modal Auto-Close on Actions**: Configured the Settings popover to automatically close (`closeSettings()`) upon launching a custom port or selecting an active port.
 
 ### Fixed
 - **README Screenshot Link**: Fixed the screenshot display on the Open VSX / VS Code Extension marketplace by using an absolute raw GitHub URL instead of a relative path inside the HTML `<img>` tag.
+- **FOUC & Scale Animation Jitter**: Added a `.preload` helper class to disable transitions during initial page render, removing scaling animations on boot and allowing the device frame to instantly snap to its calculated "Fit" scale.
+- **Missing Tab Script Crash**: Initialized dummy instances of removed tab buttons in the webview script to prevent script crashes from event listener registration.
+- **Double-Click Go Live Fix**: Pre-allocated static server port ranges (49600-49620) on initialization to prevent VS Code from reloading the webview panel when port mappings update.
+- **Type/Null Safety Guards**: Added guards in the webview message listener to safely ignore internal VS Code messages and prevent crashes.
+- **Dark Mode Proxy Styles**: Wrapped the proxy's "Dev server unreachable" 502 error in HTML/CSS with media query support for dynamic text color flipping.
 
 ## 0.0.2
 

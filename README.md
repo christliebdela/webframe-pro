@@ -1,7 +1,15 @@
 # <img src="resources/logo.png" width="28" alt="WebFrame Pro Logo" style="vertical-align: middle; margin-right: 4px;"> WebFrame Pro
 
+> [!NOTE]
+> WebFrame Pro is under active development. Updates, improvements, and bug fixes are released regularly as the extension continues to evolve.
+>
+> **Marketplace Notice:** Due to Microsoft VS Code Marketplace limitations regarding deleted identifier reclamation, this extension is published under the name **WebFrame Plus** on the official VS Code Marketplace, and as **WebFrame Pro** on the Open VSX Registry. Both packages are built from the exact same codebase and receive identical feature updates.
+>
+> If you encounter an issue or have a suggestion, please open an issue or submit a pull request on [GitHub](https://github.com/christliebdela/webframe-pro). Your feedback and contributions are always appreciated.
+
 
 ![WebFrame Pro Preview Screenshot](resources/screenshot.png)
+
 
 
 ## The Pain Point
@@ -125,6 +133,19 @@ To bypass iframe security sandboxes and keep your local dev environment running 
    npm run compile
    ```
 4. Press `F5` to launch the **Extension Development Host** to test your changes.
+
+
+---
+
+## Open Source & Contributing
+
+Thank you for choosing **WebFrame Pro**! 
+
+This project is completely open source and community-driven. If you encounter any bugs, have feature requests, or want to contribute to the codebase:
+- **Report Issues**: Submit a bug report or request features on the [GitHub Issues](https://github.com/christliebdela/webframe-pro/issues) page.
+- **Contribute**: Pull Requests (PRs) are highly encouraged! Feel free to fork the repository and submit your improvements.
+
+Your support and contributions help make WebFrame Pro better for everyone.
 
 ---
 

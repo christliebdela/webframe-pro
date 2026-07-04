@@ -21,3 +21,6 @@ Thumbs.db
 
 # Dynamically generated device frame assets (created on extension startup)
 assets/devices/
+
+# Local development notes (untracked)
+local-notes.md

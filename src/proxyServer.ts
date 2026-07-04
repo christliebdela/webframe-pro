@@ -17,7 +17,7 @@ function rewriteCookies(cookies: string[]): string[] {
     });
 }
 
-export function createProxyServer(targetPort: number): Promise<ProxyServer> {
+export function createProxyServer(targetPort: number, port: number = 0): Promise<ProxyServer> {
     return new Promise((resolve, reject) => {
         const server = http.createServer((req, res) => {
             const headers = { ...req.headers };
@@ -115,7 +115,60 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
       }
     });
 
-    // 2. DOM initialization
+    // 2. Background color syncing handler
+    function syncBackgroundWithParent() {
+        function sendBgColor() {
+            try {
+                if (!document.body) return;
+                // 1. Try body
+                let bg = window.getComputedStyle(document.body).backgroundColor;
+                if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                    window.parent.postMessage({ type: 'vpp-bg-color', color: bg }, '*');
+                    return;
+                }
+                // 2. Try html (documentElement)
+                bg = window.getComputedStyle(document.documentElement).backgroundColor;
+                if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                    window.parent.postMessage({ type: 'vpp-bg-color', color: bg }, '*');
+                    return;
+                }
+                // 3. Try main layout child elements
+                const children = document.body.children;
+                for (let i = 0; i < children.length; i++) {
+                    const child = children[i];
+                    const tag = child.tagName;
+                    if (tag !== 'SCRIPT' && tag !== 'STYLE' && tag !== 'LINK') {
+                        const childBg = window.getComputedStyle(child).backgroundColor;
+                        if (childBg && childBg !== 'rgba(0, 0, 0, 0)' && childBg !== 'transparent') {
+                            window.parent.postMessage({ type: 'vpp-bg-color', color: childBg }, '*');
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
+        sendBgColor();
+        window.addEventListener('DOMContentLoaded', sendBgColor);
+        window.addEventListener('load', sendBgColor);
+        setInterval(sendBgColor, 500);
+
+        try {
+            const observer = new MutationObserver(sendBgColor);
+            if (document.body) {
+                observer.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
+            }
+            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+        } catch (e) {}
+    }
+
+    if (document.body) {
+        syncBackgroundWithParent();
+    } else {
+        window.addEventListener('DOMContentLoaded', syncBackgroundWithParent);
+    }
+
+    // 3. DOM initialization
     function initHelper() {
         const body = document.body;
         if (!body || document.getElementById('webframe-pro-floater')) return;
@@ -181,7 +234,7 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
             #webframe-pro-floater button:hover { 
                 background: transparent !important; 
                 color: #ffffff !important; 
-            } 
+                } 
             #webframe-pro-floater button:hover svg {
                 transform: scale(1.18) !important;
             }
@@ -211,7 +264,7 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
         floater.id = 'webframe-pro-floater';
         floater.innerHTML = \`
             <button id="vpp-btn-trigger" title="Drag to reposition, Click to expand dev tools">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
             <div id="webframe-pro-floater-actions">
                 <button id="vpp-btn-back" title="Go Back">
@@ -332,8 +385,10 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
   })();
 </script>
 `;
-                        if (html.includes('</body>')) {
-                            html = html.replace('</body>', scriptToInject + '</body>');
+                        if (/<\/body>/i.test(html)) {
+                            html = html.replace(/<\/body>/i, scriptToInject + '</body>');
+                        } else if (/<\/html>/i.test(html)) {
+                            html = html.replace(/<\/html>/i, scriptToInject + '</html>');
                         } else {
                             html += scriptToInject;
                         }
@@ -348,7 +403,21 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
             pr.on('error', () => {
                 if (!res.headersSent) {
                     res.writeHead(502, { 'Content-Type': 'text/html' });
-                    res.end('<h3>Dev server unreachable on port ' + targetPort + '</h3>');
+                    res.end(`
+                        <html>
+                        <head>
+                            <style>
+                                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
+                                @media (prefers-color-scheme: dark) {
+                                    body { color: #cccccc; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h3>Dev server unreachable on port ${targetPort}</h3>
+                        </body>
+                        </html>
+                    `);
                 }
             });
             req.pipe(pr, { end: true });
@@ -368,7 +437,7 @@ export function createProxyServer(targetPort: number): Promise<ProxyServer> {
         });
 
         server.on('error', reject);
-        server.listen(0, '127.0.0.1', () => {
+        server.listen(port, '127.0.0.1', () => {
             const addr = server.address() as net.AddressInfo;
             resolve({
                 port: addr.port, targetPort,

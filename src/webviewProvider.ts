@@ -4,9 +4,13 @@ import * as fs from 'fs';
 import * as http from 'http';
 import * as https from 'https';
 import { URL } from 'url';
-import { detectActivePorts } from './serverDetector';
+import { detectActivePorts, findFreePortInRange } from './serverDetector';
 import { DEVICES } from './deviceManager';
 import { createProxyServer, ProxyServer } from './proxyServer';
+import { createStaticServer, StaticServer } from './staticServer';
+
+const PRE_MAPPED_START = 49600;
+const PRE_MAPPED_END = 49620;
 
 function checkUrlHeaders(urlStr: string): Promise<{ blocked: boolean; reason?: string }> {
     return new Promise((resolve) => {
@@ -57,6 +61,7 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
     private _mappedPorts: Set<number> = new Set();
     /** Cache of running proxy servers keyed by target port */
     private _proxyCache: Map<number, ProxyServer> = new Map();
+    private _staticServer?: StaticServer;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -92,7 +97,8 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
         if (this._proxyCache.has(targetPort)) {
             return this._proxyCache.get(targetPort)!;
         }
-        const proxy = await createProxyServer(targetPort);
+        const freePort = await findFreePortInRange(49611, PRE_MAPPED_END);
+        const proxy = await createProxyServer(targetPort, freePort);
         this._proxyCache.set(targetPort, proxy);
         // Also ensure the proxy's own port is mapped through the webview
         this._ensurePortMapped(proxy.port);
@@ -105,6 +111,10 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
             try { await proxy.stop(); } catch { /* ignore */ }
         }
         this._proxyCache.clear();
+        if (this._staticServer) {
+            try { await this._staticServer.stop(); } catch { /* ignore */ }
+            this._staticServer = undefined;
+        }
     }
 
     private _scanInterval?: NodeJS.Timeout;
@@ -118,6 +128,7 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
 
         const COMMON_PORTS = [3000, 3001, 4200, 4321, 5000, 5173, 8000, 8080, 8888];
         for (const port of COMMON_PORTS) { this._mappedPorts.add(port); }
+        for (let p = PRE_MAPPED_START; p <= PRE_MAPPED_END; p++) { this._mappedPorts.add(p); }
 
         webviewView.webview.options = {
             enableScripts: true,
@@ -127,12 +138,98 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+        // Listen to active editor changes to sync relative file path for HTML/PHP routing
+        const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(editor => {
+            if (editor && this._view) {
+                const doc = editor.document;
+                const allowedLanguages = ['html', 'php'];
+                if (allowedLanguages.includes(doc.languageId)) {
+                    const relativePath = vscode.workspace.asRelativePath(doc.uri);
+                    this._view.webview.postMessage({
+                        type: 'activeEditorFile',
+                        path: relativePath
+                    });
+                } else {
+                    this._view.webview.postMessage({
+                        type: 'activeEditorFile',
+                        path: ''
+                    });
+                }
+            }
+        });
+        this._context.subscriptions.push(activeEditorListener);
+
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
                 case 'ready': {
                     // Webview DOM and listeners are ready.
                     // DO NOT auto-scan ports on load per user request. 
                     // User must click refresh manually.
+                    const isHtml = await this._isHtmlProject();
+                    const devScripts = await this._detectFrameworkDevScripts();
+                    let activePath = '';
+                    const activeEditor = vscode.window.activeTextEditor;
+                    if (activeEditor) {
+                        const doc = activeEditor.document;
+                        const allowedLanguages = ['html', 'php'];
+                        if (allowedLanguages.includes(doc.languageId)) {
+                            activePath = vscode.workspace.asRelativePath(doc.uri);
+                        }
+                    }
+
+                    webviewView.webview.postMessage({
+                        type: 'projectInfo',
+                        isHtmlProject: isHtml,
+                        devScripts: devScripts,
+                        activeFile: activePath
+                    });
+                    break;
+                }
+                case 'launchDevServer': {
+                    const script = data.script || 'dev';
+                    let terminal = vscode.window.terminals.find(t => t.name === 'Viewport Pro Dev Server');
+                    if (!terminal) {
+                        terminal = vscode.window.createTerminal('Viewport Pro Dev Server');
+                    }
+                    terminal.show();
+                    terminal.sendText(`npm run ${script}`);
+                    break;
+                }
+                case 'startStaticServer': {
+                    const folders = vscode.workspace.workspaceFolders;
+                    if (folders && folders.length > 0) {
+                        try {
+                            if (!this._staticServer) {
+                                const workspaceRoot = folders[0].uri.fsPath;
+                                const freePort = await findFreePortInRange(PRE_MAPPED_START, 49610);
+                                this._staticServer = await createStaticServer(workspaceRoot, freePort);
+                                this._ensurePortMapped(this._staticServer.port);
+                            }
+                            webviewView.webview.postMessage({
+                                type: 'staticServerReady',
+                                port: this._staticServer.port
+                            });
+                        } catch (err) {
+                            webviewView.webview.postMessage({
+                                type: 'proxyError',
+                                error: 'Failed to start static server: ' + err,
+                            });
+                        }
+                    } else {
+                        webviewView.webview.postMessage({
+                            type: 'proxyError',
+                            error: 'No active workspace folders found to host.',
+                        });
+                    }
+                    break;
+                }
+                case 'stopStaticServer': {
+                    if (this._staticServer) {
+                        try {
+                            await this._staticServer.stop();
+                        } catch (e) { /* ignore */ }
+                        this._staticServer = undefined;
+                    }
                     break;
                 }
                 case 'refreshPorts': {
@@ -153,12 +250,20 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
                     const targetPort = parseInt(data.port, 10);
                     if (targetPort > 0 && targetPort <= 65535) {
                         try {
-                            const proxy = await this._getOrCreateProxy(targetPort);
-                            webviewView.webview.postMessage({
-                                type: 'proxyReady',
-                                targetPort: targetPort,
-                                proxyPort: proxy.port,
-                            });
+                            const activePorts = await detectActivePorts([targetPort]);
+                            if (activePorts.includes(targetPort)) {
+                                const proxy = await this._getOrCreateProxy(targetPort);
+                                webviewView.webview.postMessage({
+                                    type: 'proxyReady',
+                                    targetPort: targetPort,
+                                    proxyPort: proxy.port,
+                                });
+                            } else {
+                                webviewView.webview.postMessage({
+                                    type: 'serverUnreachable',
+                                    targetPort: targetPort,
+                                });
+                            }
                         } catch (err) {
                             webviewView.webview.postMessage({
                                 type: 'proxyError',
@@ -176,6 +281,11 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
                 }
                 case 'saveConfig': {
                     await this._context.globalState.update('viewportProConfig', data.config);
+                    break;
+                }
+                case 'clearConfig': {
+                    await this._context.globalState.update('viewportProConfig', undefined);
+                    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
                     break;
                 }
             }
@@ -287,6 +397,35 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
             .replace(/\${cspSource}/g, webview.cspSource);
 
         return html;
+    }
+
+    private async _isHtmlProject(): Promise<boolean> {
+        const folders = vscode.workspace.workspaceFolders;
+        if (!folders || folders.length === 0) {
+            return false;
+        }
+        // Search for index.html or any html file in the workspace
+        const files = await vscode.workspace.findFiles('**/*.html', '**/node_modules/**', 5);
+        return files.length > 0;
+    }
+
+    private async _detectFrameworkDevScripts(): Promise<string[]> {
+        const folders = vscode.workspace.workspaceFolders;
+        if (!folders || folders.length === 0) {
+            return [];
+        }
+        try {
+            const packageJsonPath = path.join(folders[0].uri.fsPath, 'package.json');
+            if (fs.existsSync(packageJsonPath)) {
+                const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+                if (packageJson.scripts) {
+                    const scripts = Object.keys(packageJson.scripts);
+                    const devScripts = scripts.filter(s => s === 'dev' || s === 'start' || s === 'serve');
+                    return devScripts;
+                }
+            }
+        } catch (e) {}
+        return [];
     }
 }
 

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="${styleUri}?v=${nonce}">
     <title>WebFrame Pro</title>
 </head>
-<body>
+<body class="preload">
     <!-- Hidden element containing Base64 encoded saved configuration state to avoid JS syntax linter issues and quoting bugs -->
     <div id="saved-config-data" style="display: none;" data-config="${savedConfigBase64}"></div>
     
@@ -32,8 +32,8 @@
                 
                 <!-- Custom Dropdown Trigger for Scale Selection in the top bar -->
                 <div class="custom-dropdown" id="badge-scale-dropdown">
-                    <button type="button" class="badge-trigger" id="badge-scale-trigger" title="Select Viewport Scale">
-                        <span id="badge-scale-text">Scale: 83%</span>
+                    <button type="button" class="badge-trigger" id="badge-scale-trigger" data-tooltip="Select Viewport Scale">
+                        <span id="badge-scale-text">83%</span>
                         <svg class="chevron-icon" width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <div class="dropdown-content" id="badge-scale-content">
@@ -55,14 +55,14 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <!-- Refresh Preview Button -->
-                <button class="info-bar-btn" id="btn-refresh-preview" title="Refresh Page">
+                <button class="info-bar-btn" id="btn-refresh-preview" data-tooltip="Reload Extension">
                     <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
                 </button>
-
+ 
                 <!-- Device Theme Quick Toggle Button -->
-                <button class="info-bar-btn" id="btn-toggle-theme" title="Toggle Device Theme">
+                <button class="info-bar-btn" id="btn-toggle-theme" data-tooltip="Toggle Device Theme">
                     <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -75,80 +75,107 @@
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
                 </button>
-
+ 
                 <!-- Device Orientation Quick Toggle Button -->
-                <button class="info-bar-btn" id="btn-toggle-orientation" title="Toggle Device Orientation">
+                <button class="info-bar-btn" id="btn-toggle-orientation" data-tooltip="Toggle Device Orientation">
                     <svg class="orientation-icon" id="orientation-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px; transition: transform 0.2s ease;">
                         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                         <line x1="12" y1="18" x2="12" y2="18.01"></line>
                     </svg>
                 </button>
-
+ 
                 <!-- Screen Power Quick Toggle Button -->
-                <button class="info-bar-btn" id="btn-toggle-power" title="Turn Screen Off/On">
+                <button class="info-bar-btn" id="btn-toggle-power" data-tooltip="Turn Screen Off/On">
                     <svg class="power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px; transition: color 0.2s ease;">
                         <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                         <line x1="12" y1="2" x2="12" y2="12"></line>
                     </svg>
                 </button>
-
+ 
                 <!-- Configurations Dropdown Popover -->
                 <div class="custom-dropdown" id="settings-dropdown">
-                    <button class="info-bar-btn" id="btn-toggle-settings" title="Configurations">
-                        <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <button class="info-bar-btn" id="btn-toggle-settings" data-tooltip="Source Server Settings">
+                        <svg class="gear-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                     </button>
                     <div class="dropdown-content settings-popover" id="settings-dropdown-content">
-                        <div class="settings-popover-title">Configurations</div>
-                        
-                        <!-- Web Source Segmented Control Tabs -->
-                        <div class="form-group">
-                            <label>Source Server</label>
-                            <div class="tabs-container">
-                                <div class="tabs-list">
-                                    <button type="button" class="tab-btn active" id="tab-localhost">Local Server</button>
-                                    <button type="button" class="tab-btn" id="tab-live" style="display: none !important;">Live URL</button>
-                                </div>
+                        <!-- Popover Header -->
+                        <div class="popover-header" style="margin-bottom: 8px;">
+                            <div class="header-icon-container">
+                                <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                            </div>
+                            <div class="header-text">
+                                <div class="popover-main-title">Source Server</div>
+                                <div class="popover-subtitle">Configure the workspace source server.</div>
                             </div>
                         </div>
 
-                        <!-- Localhost Panel -->
-                        <div id="popover-localhost-panel" class="source-panel active">
-                            <div class="port-input-row">
-                                <div class="form-group-sub">
-                                    <label>Active Port</label>
-                                    <div class="custom-dropdown form-select-container" id="popover-port-dropdown">
-                                        <button type="button" class="form-select-trigger" id="popover-port-trigger">
-                                            <span id="popover-port-text">Select port...</span>
-                                            <svg class="chevron-icon" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                                        </button>
-                                        <div class="dropdown-content form-select-content" id="popover-port-content">
-                                            <!-- Dynamically populated -->
-                                        </div>
-                                    </div>
+                        <!-- Combined Configurations Card -->
+                        <div class="popover-card" style="display: flex; flex-direction: column; gap: 10px; padding: 12px; background-color: var(--vscode-sideBar-background, rgba(0, 0, 0, 0.1)); border: 1px solid var(--vscode-dropdown-border, #3c3c3c); border-radius: 8px;">
+                            
+                            <!-- Active Session Section (shown when a preview is active) -->
+                             <div id="session-bar" style="display: none; flex-direction: column; gap: 8px; padding: 8px 10px; background-color: var(--vscode-statusBar-background, rgba(0, 120, 212, 0.15)); border: 1px solid var(--vscode-statusBar-border, rgba(0, 120, 212, 0.25)); border-radius: 6px; font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);">
+                                <div class="row-title" style="margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; font-size: 8.5px; letter-spacing: 0.5px; font-weight: 700; color: var(--vscode-descriptionForeground, #858585);">
+                                    <span>ACTIVE PREVIEW SESSION</span>
+                                    <div id="session-indicator" style="width: 6px; height: 6px; border-radius: 50%; background-color: #4caf50; animation: pulse-dot 2s ease-in-out infinite;"></div>
                                 </div>
-                                <div class="form-group-sub">
-                                    <label for="popover-custom-port">Custom Port</label>
+                                <div style="display: flex; flex-direction: column; gap: 6px; align-items: stretch;">
+                                    <span id="session-label" style="font-size: 11px; font-weight: 600; color: var(--vscode-foreground, #cccccc); word-break: break-all;">Static Server :49600</span>
+                                    <button type="button" id="session-stop-btn" data-tooltip="Stop preview and disconnect" class="btn" style="height: 22px !important; line-height: 1; padding: 0 8px; font-size: 9.5px; font-weight: 600; background-color: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #ffffff); border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 100%;">
+                                        Stop Session
+                                    </button>
+                                </div>
+                                <div class="card-divider" style="height: 1px; background-color: var(--vscode-dropdown-border, #3c3c3c); opacity: 0.7; margin-top: 4px;"></div>
+                            </div>
+                            
+                            <!-- Active Ports Section with Inline Refresh Button -->
+                            <div class="card-section">
+                                <div class="card-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <div class="row-title" style="margin-bottom: 0;">ACTIVE PORTS</div>
+                                    <!-- Sleek inline refresh button to scan ports -->
+                                    <button type="button" id="popover-refresh-ports-btn" class="info-bar-btn" data-tooltip="Refresh Active Port Scan" style="padding: 2px; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 3px;">
+                                        <svg class="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 10px; height: 10px;"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                                    </button>
+                                </div>
+                                <div class="row-subtitle" style="margin-bottom: 6px;">Detected local servers.</div>
+                                <div class="ports-list-container" id="popover-port-content" style="display: flex; flex-direction: column; gap: 4px; max-height: 110px; overflow-y: auto;">
+                                    <div class="info-text" style="opacity: 0.6; font-size: 10px;">Click ↻ to scan active ports</div>
+                                </div>
+                                <div id="popover-no-ports-msg" style="display: none;"></div>
+                            </div>
+
+                            <div class="card-divider" style="height: 1px; background-color: var(--vscode-dropdown-border, #3c3c3c); opacity: 0.7; margin: 4px 0;"></div>
+
+                            <!-- Custom Port Section -->
+                            <div class="card-section">
+                                <div class="row-title">CUSTOM PORT</div>
+                                <div class="row-subtitle" style="margin-bottom: 6px;">Enter the port number to preview.</div>
+                                <div class="url-input-row" style="display: flex; gap: 6px;">
                                     <input type="number" id="popover-custom-port" class="form-control" placeholder="e.g. 3000">
+                                    <button type="button" id="popover-launch-port-btn" class="btn btn-primary btn-go" style="width: 76px !important; gap: 4px; display: inline-flex; align-items: center; justify-content: center; background-color: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #ffffff); border: none; border-radius: 4px;">
+                                        Launch
+                                    </button>
                                 </div>
                             </div>
-                            <div id="popover-no-ports-msg" class="info-text">Click "Refresh Scan" to detect servers.</div>
-                            <button id="popover-refresh-ports-btn" class="btn btn-secondary">Refresh Scan</button>
-                        </div>
 
-                        <!-- Live URL Panel (Hidden per config) -->
-                        <div id="popover-live-panel" class="source-panel" style="display: none !important;">
-                            <label for="popover-live-url">Live Web URL</label>
-                            <div class="url-input-row">
-                                <input type="text" id="popover-live-url" class="form-control" placeholder="https://example.com" value="https://example.com">
-                                <button type="button" id="popover-go-url-btn" class="btn btn-primary btn-go">Go</button>
+                            <!-- Conditional static Go Live section directly inside the card -->
+                            <div id="popover-go-live-card" style="display: none;">
+                                <div class="card-divider" style="height: 1px; background-color: var(--vscode-dropdown-border, #3c3c3c); opacity: 0.7; margin: 4px 0;"></div>
+                                <div class="card-section" style="margin-top: 4px;">
+                                    <div class="row-title">STATIC HTML PROJECT</div>
+                                    <div class="row-subtitle" style="margin-bottom: 6px;">Host local files using the built-in server.</div>
+                                    <button id="popover-go-live-btn" class="btn btn-primary" style="height: 28px !important; gap: 4px; display: flex; align-items: center; justify-content: center; background-color: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #ffffff); border: none; width: 100%; cursor: pointer;">
+                                        Host Project (Go Live)
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- WebFrame Pro Extension Info Footer -->
-                        <div class="webframe-info-footer">
-                            <div class="webframe-info-version">v${version}</div>
-                            <div class="webframe-info-created">Created by <a href="https://github.com/christliebdela" target="_blank">Christlieb Dela</a></div>
-                            <div class="webframe-info-updated">Last updated: ${lastUpdated}</div>
+
+                        <!-- Sleek footer (No author/version text) -->
+                        <div class="popover-footer" style="border-top: 1px solid var(--vscode-dropdown-border, #3c3c3c); padding-top: 8px; margin-top: 6px; display: flex; justify-content: space-between; align-items: center;">
+                            <div class="footer-badge" style="font-size: 8.5px; font-family: monospace; font-weight: 600; padding: 1px 5px; border-radius: 4px; background-color: var(--vscode-badge-background, rgba(255, 255, 255, 0.04)); border: 1px solid var(--vscode-dropdown-border, #3c3c3c); color: var(--vscode-foreground, #cccccc);">v${version}</div>
+                            <div class="footer-updated" style="font-size: 8.5px; color: var(--vscode-descriptionForeground, #858585); display: flex; align-items: center;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:9px; height:9px; margin-right:3px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Sync: ${lastUpdated}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -170,6 +197,17 @@
                             </div>
                         </div>
 
+                        <!-- Connecting/Loading Overlay (Visible while waiting for server response) -->
+                        <div id="device-connecting-screen" class="device-overlay-screen">
+                            <div class="placeholder-content">
+                                <div class="connecting-spinner" style="width: 28px; height: 28px; border: 2.5px solid rgba(255,255,255,0.1); border-top-color: var(--vscode-textLink-foreground, #3794ff); border-radius: 50%; animation: spin-connecting 0.7s linear infinite; margin-bottom: 10px;"></div>
+                                <div class="placeholder-title" style="font-size: 12px; font-weight: 600;">Connecting...</div>
+                                <div class="placeholder-desc" id="connecting-status-text" style="font-size: 10px; margin-top: 6px; opacity: 0.7;">
+                                    Reaching port <span id="connecting-port-display" style="font-weight: 600; color: var(--vscode-textLink-foreground, #3794ff);">3000</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Blocked URL Overlay (Visible when iframe is blocked by X-Frame-Options) -->
                         <div id="device-blocked-screen" class="device-overlay-screen">
                             <div class="placeholder-content">
@@ -180,6 +218,37 @@
                                 </div>
                                 <div class="placeholder-tip" style="font-size: 10px; margin-top: 12px; padding: 0 14px; opacity: 0.65; line-height: 1.3;">
                                     To inspect this site, run a local development version or deploy it to a server that allows iframe loading.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unreachable Server Overlay -->
+                        <div id="device-unreachable-screen" class="device-overlay-screen">
+                            <div class="placeholder-content">
+                                <svg class="blocked-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 32px; height: 32px; color: var(--vscode-errorForeground, #f48771); margin-bottom: 6px; display: block;">
+                                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                    <line x1="22" y1="2" x2="2" y2="22" stroke="var(--vscode-errorForeground, #f48771)" stroke-width="2.5"></line>
+                                </svg>
+                                <div class="placeholder-title" style="color: var(--vscode-errorForeground, #f48771); font-size: 13px; font-weight: 600;">Server Unreachable</div>
+                                <div class="placeholder-desc" style="font-size: 11px; margin-top: 8px; padding: 0 16px; line-height: 1.4; color: var(--vscode-foreground, #cccccc); font-weight: 500; text-transform: none; letter-spacing: normal;">
+                                    No active local server was found running on port <span id="unreachable-port-display" style="font-weight: 600; color: var(--vscode-textLink-foreground, #3794ff);"></span>.
+                                </div>
+                                <div class="placeholder-tip" style="font-size: 10px; margin-top: 12px; padding: 0 10px; color: var(--vscode-descriptionForeground, #858585); line-height: 1.4;">
+                                    Make sure your server is started (e.g., Node/Vite, PHP, Python). 
+                                    <div style="margin-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+                                        <strong>Static HTML/CSS projects:</strong> Start a local server (like the VS Code <em>"Live Server"</em> extension on port <span style="font-weight: 600;">5500</span>) or host it directly below.
+                                    </div>
+                                </div>
+                                <button type="button" id="error-go-live-btn" class="btn btn-primary" style="margin-top: 14px; height: 26px !important; padding: 0 16px !important; font-size: 10px; font-weight: 600; gap: 4px; display: none; align-items: center; justify-content: center; background-color: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #ffffff); border: none; border-radius: 4px; cursor: pointer; width: auto; max-width: 100%;">
+                                    Host Project (Go Live)
+                                </button>
+                                <div id="unreachable-launcher-container" style="margin-top: 14px; display: none; flex-direction: column; align-items: center; gap: 8px;">
+                                    <button type="button" id="unreachable-launch-dev-btn" class="btn btn-primary" style="height: 26px !important; padding: 0 16px !important; font-size: 10px; font-weight: 600; background-color: var(--vscode-button-background, #0e639c); color: var(--vscode-button-foreground, #ffffff); border: none; border-radius: 4px; cursor: pointer; width: auto; max-width: 100%;">
+                                        Start Dev Server
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -251,19 +320,101 @@
             
             // State for continuous rotation animation
             let currentFrameRotation = 0;
+            let isPreviewStarted = false;
+
+            // Custom Tooltip System (shadcn style)
+            const tooltipEl = document.createElement('div');
+            tooltipEl.id = 'vpp-custom-tooltip';
+            tooltipEl.style.cssText = `
+                position: fixed;
+                z-index: 999999;
+                pointer-events: none;
+                background-color: var(--vscode-sideBar-background, #1e1e1f);
+                color: var(--vscode-sideBar-foreground, #cccccc);
+                border: 1px solid var(--vscode-dropdown-border, #3c3c3c);
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: 500;
+                font-family: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, sans-serif);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+                opacity: 0;
+                transform: scale(0.95) translateY(4px);
+                transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+                white-space: nowrap;
+                display: none;
+            `;
+            document.body.appendChild(tooltipEl);
+
+            let tooltipTimeout = null;
+
+            document.addEventListener('mouseover', (e) => {
+                const target = e.target.closest('[data-tooltip]');
+                if (!target) return;
+
+                const text = target.getAttribute('data-tooltip');
+                if (!text) return;
+
+                if (tooltipTimeout) clearTimeout(tooltipTimeout);
+
+                tooltipEl.textContent = text;
+                tooltipEl.style.display = 'block';
+
+                const targetRect = target.getBoundingClientRect();
+                const tooltipRect = tooltipEl.getBoundingClientRect();
+
+                // Position: Centered above target
+                let top = targetRect.top - tooltipRect.height - 6;
+                let left = targetRect.left + (targetRect.width - tooltipRect.width) / 2;
+
+                // Adjust if off-screen top
+                if (top < 4) {
+                    top = targetRect.bottom + 6;
+                }
+
+                // Adjust horizontally
+                if (left < 4) {
+                    left = 4;
+                } else if (left + tooltipRect.width > window.innerWidth - 4) {
+                    left = window.innerWidth - tooltipRect.width - 4;
+                }
+
+                tooltipEl.style.top = `${top}px`;
+                tooltipEl.style.left = `${left}px`;
+
+                // Trigger animations
+                requestAnimationFrame(() => {
+                    tooltipEl.style.opacity = '1';
+                    tooltipEl.style.transform = 'scale(1) translateY(0)';
+                });
+            });
+
+            document.addEventListener('mouseout', (e) => {
+                const target = e.target.closest('[data-tooltip]');
+                if (!target) return;
+
+                tooltipEl.style.opacity = '0';
+                tooltipEl.style.transform = 'scale(0.95) translateY(4px)';
+
+                if (tooltipTimeout) clearTimeout(tooltipTimeout);
+                tooltipTimeout = setTimeout(() => {
+                    tooltipEl.style.display = 'none';
+                }, 100);
+            });
             
             // Injected device definitions database
             const viewportProDevicesDb = JSON.parse('${deviceDataMap}');
 
             const deviceSelect = document.getElementById('device-select');
-            const tabLocalhost = document.getElementById('tab-localhost');
-            const tabLive = document.getElementById('tab-live');
-            const localhostPanel = document.getElementById('popover-localhost-panel');
-            const livePanel = document.getElementById('popover-live-panel');
+            const tabLocalhost = document.getElementById('tab-localhost') || document.createElement('div');
+            tabLocalhost.classList.add('active');
+            const tabLive = document.getElementById('tab-live') || document.createElement('div');
+            const localhostPanel = document.getElementById('popover-localhost-panel') || document.createElement('div');
+            const livePanel = document.getElementById('popover-live-panel') || document.createElement('div');
             const portSelect = document.getElementById('popover-port-select');
             const customPortInput = document.getElementById('popover-custom-port');
-            const liveUrlInput = document.getElementById('popover-live-url');
-            const goUrlBtn = document.getElementById('popover-go-url-btn');
+            const liveUrlInput = document.getElementById('popover-live-url') || document.createElement('input');
+            const goUrlBtn = document.getElementById('popover-go-url-btn') || document.createElement('button');
             const scaleWrapper = document.querySelector('.device-scale-wrapper');
             const rotationSelect = document.getElementById('popover-rotation-select');
             const scaleSelect = document.getElementById('popover-scale-select');
@@ -276,6 +427,61 @@
             const deviceContainer = document.getElementById('device-container');
             const deviceViewport = document.getElementById('device-viewport');
             const deviceBlockedScreen = document.getElementById('device-blocked-screen');
+            const deviceUnreachableScreen = document.getElementById('device-unreachable-screen');
+            const deviceConnectingScreen = document.getElementById('device-connecting-screen');
+            const connectingPortDisplay = document.getElementById('connecting-port-display');
+            const connectingStatusText = document.getElementById('connecting-status-text');
+            const unreachablePortDisplay = document.getElementById('unreachable-port-display');
+            const unreachableLauncherContainer = document.getElementById('unreachable-launcher-container');
+            const unreachableLaunchDevBtn = document.getElementById('unreachable-launch-dev-btn');
+            const goLiveCard = document.getElementById('popover-go-live-card');
+            const goLiveBtn = document.getElementById('popover-go-live-btn');
+            const errorGoLiveBtn = document.getElementById('error-go-live-btn');
+            const sessionBar = document.getElementById('session-bar');
+            const sessionLabel = document.getElementById('session-label');
+            const sessionStopBtn = document.getElementById('session-stop-btn');
+
+            // Helper: show connecting overlay with context
+            function showConnecting(label) {
+                devicePlaceholder.classList.remove('show');
+                deviceBlockedScreen.classList.remove('show');
+                deviceUnreachableScreen.classList.remove('show');
+                deviceViewport.style.opacity = '0';
+                if (label.startsWith('Starting')) {
+                    connectingStatusText.innerHTML = label;
+                } else {
+                    connectingPortDisplay.textContent = label;
+                    connectingStatusText.innerHTML = 'Reaching port <span style="font-weight:600;color:var(--vscode-textLink-foreground,#3794ff);">' + label + '</span>';
+                }
+                deviceConnectingScreen.classList.add('show');
+            }
+
+            // Helper: hide connecting overlay
+            function hideConnecting() {
+                deviceConnectingScreen.classList.remove('show');
+            }
+
+            // Helper: show session bar
+            function showSessionBar(label) {
+                sessionLabel.textContent = label;
+                sessionBar.style.display = 'flex';
+            }
+
+            // Helper: hide session bar and reset state
+            function stopSession() {
+                isPreviewStarted = false;
+                sessionBar.style.display = 'none';
+                customPortInput.value = '';
+                portSelect.value = '';
+                hideConnecting();
+                deviceUnreachableScreen.classList.remove('show');
+                deviceBlockedScreen.classList.remove('show');
+                devicePlaceholder.classList.add('show');
+                deviceViewport.style.opacity = '0';
+                deviceViewport.src = 'about:blank';
+                statusBarEl.style.backgroundColor = '';
+                statusBarEl.style.color = '';
+            }
             const deviceFrame = document.getElementById('device-frame');
             const badgeResolution = document.getElementById('badge-resolution');
             const badgeScaleText = document.getElementById('badge-scale-text');
@@ -487,8 +693,7 @@
             }
 
             // Initialize custom selects inside Configurations Popover
-            setupCustomSelect('popover-port-dropdown', 'popover-port-trigger', 'popover-port-text', 'popover-port-content', 'popover-port-select', 'Select Port...');
-            setupCustomSelect('badge-scale-dropdown', 'badge-scale-trigger', 'badge-scale-text', 'badge-scale-content', 'popover-scale-select', 'Scale: Fit');
+            setupCustomSelect('badge-scale-dropdown', 'badge-scale-trigger', 'badge-scale-text', 'badge-scale-content', 'popover-scale-select', 'Fit');
 
             // Hardware buttons generator helper
             function getHardwareButtons(key, w, h) {
@@ -717,7 +922,7 @@
                 }
                 
                 statusbarSelect.value = newTheme;
-                statusbarSelect.dispatchEvent(new Event('change'));
+                updatePreview();
             });
 
              // Toggle Device Orientation directly from top bar quick button
@@ -761,7 +966,6 @@
             function toggleDropdown(e) {
                 e.stopPropagation();
                 closeSettings();
-                closeScaleDropdown();
                 closeAllCustomSelects();
                 const isOpen = dropdownContent.classList.contains('show');
                 if (isOpen) {
@@ -776,7 +980,6 @@
             function toggleSettings(e) {
                 e.stopPropagation();
                 closeDropdown();
-                closeScaleDropdown();
                 closeAllCustomSelects();
                 const isOpen = settingsContent.classList.contains('show');
                 if (isOpen) {
@@ -784,6 +987,7 @@
                 } else {
                     settingsContent.classList.add('show');
                     showBackdrop(closeSettings);
+                    vscode.postMessage({ type: 'refreshPorts' });
                 }
             }
 
@@ -796,13 +1000,9 @@
             dropdownTrigger.addEventListener('click', toggleDropdown);
             settingsTrigger.addEventListener('click', toggleSettings);
 
-            // Reload content using reliable blank source swap
+            // Reload extension completely and clear configurations
             refreshPreviewBtn.addEventListener('click', () => {
-                const currentSrc = deviceViewport.src;
-                deviceViewport.src = 'about:blank';
-                setTimeout(() => {
-                    deviceViewport.src = currentSrc;
-                }, 50);
+                vscode.postMessage({ type: 'clearConfig' });
             });
 
             // Toggle screen power
@@ -845,21 +1045,60 @@
 
             portSelect.addEventListener('change', () => {
                 customPortInput.value = '';
+                if (portSelect.value) {
+                    isPreviewStarted = true;
+                    showConnecting(portSelect.value);
+                }
                 updatePreview();
+                closeSettings();
+            });
+
+            // ========== Configuration Popover UI Binding ==========
+
+            const launchPortBtn = document.getElementById('popover-launch-port-btn');
+            if (launchPortBtn) {
+                launchPortBtn.addEventListener('click', () => {
+                    if (customPortInput.value) {
+                        isPreviewStarted = true;
+                        showConnecting(customPortInput.value);
+                    }
+                    updatePreview();
+                    closeSettings();
+                });
+            }
+
+            customPortInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (customPortInput.value) {
+                        isPreviewStarted = true;
+                        showConnecting(customPortInput.value);
+                    }
+                    updatePreview();
+                    closeSettings();
+                }
             });
 
             customPortInput.addEventListener('input', () => {
                 if (customPortInput.value) {
                     portSelect.value = '';
+                    document.querySelectorAll('#popover-port-content .dropdown-item').forEach(el => el.classList.remove('active'));
                 }
-                updatePreview();
             });
 
             // Trigger loading when clicking Go button or pressing Enter
-            goUrlBtn.addEventListener('click', updatePreview);
+            goUrlBtn.addEventListener('click', () => {
+                if (liveUrlInput.value) {
+                    isPreviewStarted = true;
+                }
+                updatePreview();
+            });
             liveUrlInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
+                    if (liveUrlInput.value) {
+                        isPreviewStarted = true;
+                    }
                     updatePreview();
                 }
             });
@@ -867,6 +1106,40 @@
             refreshPortsBtn.addEventListener('click', () => {
                 vscode.postMessage({ type: 'refreshPorts' });
             });
+
+            if (goLiveBtn) {
+                goLiveBtn.addEventListener('click', () => {
+                    isPreviewStarted = true;
+                    showConnecting('Starting static server...');
+                    vscode.postMessage({ type: 'startStaticServer' });
+                    closeSettings();
+                });
+            }
+
+            if (errorGoLiveBtn) {
+                errorGoLiveBtn.addEventListener('click', () => {
+                    isPreviewStarted = true;
+                    showConnecting('Starting static server...');
+                    vscode.postMessage({ type: 'startStaticServer' });
+                });
+            }
+
+            // Session stop button
+            if (sessionStopBtn) {
+                sessionStopBtn.addEventListener('click', () => {
+                    vscode.postMessage({ type: 'stopStaticServer' });
+                    stopSession();
+                });
+            }
+
+            if (unreachableLaunchDevBtn) {
+                unreachableLaunchDevBtn.addEventListener('click', () => {
+                    if (window.devScripts && window.devScripts.length > 0) {
+                        const script = window.devScripts[0];
+                        vscode.postMessage({ type: 'launchDevServer', script: script });
+                    }
+                });
+            }
 
             // Handle window resizing (fluid "Fit" scale updating)
             window.addEventListener('resize', () => {
@@ -878,10 +1151,27 @@
             // Receive message updates from back-end (port scanning logs)
             window.addEventListener('message', event => {
                 const message = event.data;
+                if (!message || typeof message !== 'object') return;
                 switch (message.type) {
+                    case 'vpp-bg-color':
+                        if (message.color && message.color !== 'rgba(0, 0, 0, 0)' && message.color !== 'transparent') {
+                            statusBarEl.style.backgroundColor = message.color;
+                            
+                            // Parse RGB components to compute contrast brightness (YIQ formula)
+                            const rgb = message.color.match(/\d+/g);
+                            if (rgb && rgb.length >= 3) {
+                                const r = parseInt(rgb[0], 10);
+                                const g = parseInt(rgb[1], 10);
+                                const b = parseInt(rgb[2], 10);
+                                const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                                const isDark = yiq < 128;
+                                statusBarEl.style.color = isDark ? '#ffffff' : '#000000';
+                            }
+                        }
+                        break;
                     case 'scanningPorts':
-                        const triggerText = document.getElementById('popover-port-text');
-                        if (triggerText) triggerText.textContent = 'Scanning...';
+                        const portContent = document.getElementById('popover-port-content');
+                        if (portContent) portContent.innerHTML = '<div class="info-text">Scanning...</div>';
                         refreshPortsBtn.classList.add('spinning');
                         break;
                     case 'activePorts':
@@ -894,8 +1184,7 @@
                         if (ports.length === 0) {
                             portSelect.innerHTML = '<option value="" selected>No servers</option>';
                             noPortsMsg.style.display = 'block';
-                            
-                            document.getElementById('popover-port-text').textContent = 'No servers';
+                            popoverPortContent.innerHTML = '<div class="info-text">No servers</div>';
                         } else {
                             noPortsMsg.style.display = 'none';
                             ports.forEach(port => {
@@ -907,16 +1196,29 @@
                                 const item = document.createElement('div');
                                 item.className = 'dropdown-item';
                                 item.dataset.value = port.toString();
+                                item.style.border = '1px solid var(--vscode-dropdown-border)';
+                                item.style.borderRadius = '4px';
+                                item.style.padding = '6px 8px';
                                 item.innerHTML = `
                                     <span class="dropdown-item-check"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
                                     <span class="dropdown-item-label">localhost:${port}</span>
                                 `;
+                                
+                                item.addEventListener('click', () => {
+                                    portSelect.value = port.toString();
+                                    document.querySelectorAll('#popover-port-content .dropdown-item').forEach(el => el.classList.remove('active'));
+                                    item.classList.add('active');
+                                    portSelect.dispatchEvent(new Event('change'));
+                                });
+                                
                                 popoverPortContent.appendChild(item);
                             });
 
                             if (!customPortInput.value) {
                                 if (window.savedSelectedPort && ports.includes(parseInt(window.savedSelectedPort, 10))) {
                                     portSelect.value = window.savedSelectedPort.toString();
+                                    const activeItem = popoverPortContent.querySelector(`.dropdown-item[data-value="${window.savedSelectedPort}"]`);
+                                    if (activeItem) activeItem.classList.add('active');
                                 } else {
                                     portSelect.selectedIndex = 0;
                                 }
@@ -935,8 +1237,10 @@
                                 deviceBlockedScreen.classList.add('show');
                                 deviceViewport.style.opacity = '0';
                                 devicePlaceholder.classList.remove('show');
+                                deviceUnreachableScreen.classList.remove('show');
                             } else {
                                 deviceBlockedScreen.classList.remove('show');
+                                deviceUnreachableScreen.classList.remove('show');
                                 if (getUrl() !== 'about:blank') {
                                     deviceViewport.style.opacity = '1';
                                 }
@@ -944,37 +1248,84 @@
                         }
                         break;
                     case 'proxyReady':
+                        hideConnecting();
                         activeProxies[message.targetPort] = message.proxyPort;
+                        showSessionBar('Port :' + message.targetPort);
                         updatePreview();
                         break;
+                    case 'serverUnreachable':
+                        hideConnecting();
+                        unreachablePortDisplay.textContent = message.targetPort;
+                        deviceUnreachableScreen.classList.add('show');
+                        deviceViewport.style.opacity = '0';
+                        devicePlaceholder.classList.remove('show');
+                        sessionBar.style.display = 'none';
+                        break;
                     case 'proxyError':
+                        hideConnecting();
                         console.error('Failed to start auth proxy:', message.error);
+                        break;
+                    case 'projectInfo':
+                        window.isHtmlProject = message.isHtmlProject;
+                        window.activeEditorFile = message.activeFile || '';
+                        window.devScripts = message.devScripts || [];
+                        if (window.isHtmlProject) {
+                            if (goLiveCard) goLiveCard.style.display = 'block';
+                            if (errorGoLiveBtn) errorGoLiveBtn.style.display = 'inline-flex';
+                        } else {
+                            if (goLiveCard) goLiveCard.style.display = 'none';
+                            if (errorGoLiveBtn) errorGoLiveBtn.style.display = 'none';
+                        }
+                        if (window.devScripts.length > 0) {
+                            if (unreachableLauncherContainer) unreachableLauncherContainer.style.display = 'flex';
+                            if (unreachableLaunchDevBtn) unreachableLaunchDevBtn.textContent = `Start Dev Server (npm run ${window.devScripts[0]})`;
+                        } else {
+                            if (unreachableLauncherContainer) unreachableLauncherContainer.style.display = 'none';
+                        }
+                        break;
+                    case 'activeEditorFile':
+                        if (message.path) {
+                            window.activeEditorFile = message.path;
+                            if (isPreviewStarted) {
+                                updatePreview();
+                            }
+                        }
+                        break;
+                    case 'staticServerReady':
+                        hideConnecting();
+                        isPreviewStarted = true;
+                        customPortInput.value = message.port.toString();
+                        portSelect.value = '';
+                        document.querySelectorAll('#popover-port-content .dropdown-item').forEach(el => el.classList.remove('active'));
+                        showSessionBar('Static Server :' + message.port);
+                        updatePreview();
+                        closeSettings();
                         break;
                 }
             });
 
             function getUrl() {
-                const isLocal = tabLocalhost.classList.contains('active');
-                if (isLocal) {
-                    const customPort = customPortInput.value;
-                    if (customPort) {
-                        return `http://localhost:${customPort}`;
-                    }
-                    const selectedPort = portSelect.value;
-                    if (selectedPort) {
-                        return `http://localhost:${selectedPort}`;
-                    }
-                    return 'about:blank'; // default to blank if no server detected yet
-                } else {
-                    let url = liveUrlInput.value.trim();
-                    if (url && !/^https?:\/\//i.test(url)) {
-                        url = 'https://' + url;
-                    }
-                    return url || 'about:blank';
+                let pathSuffix = '';
+                if (window.activeEditorFile && !window.activeEditorFile.includes(':') && !window.activeEditorFile.startsWith('/')) {
+                    pathSuffix = '/' + window.activeEditorFile.replace(/\\/g, '/');
                 }
+
+                const customPort = customPortInput.value;
+                if (customPort) {
+                    return `http://localhost:${customPort}${pathSuffix}`;
+                }
+                const selectedPort = portSelect.value;
+                if (selectedPort) {
+                    return `http://localhost:${selectedPort}${pathSuffix}`;
+                }
+                return 'about:blank'; // default to blank if no server detected yet
             }
 
             function updatePreview() {
+                // Reset status bar dynamic styling on update
+                statusBarEl.style.backgroundColor = '';
+                statusBarEl.style.color = '';
+
                 const deviceKey = deviceSelect.value;
                 const deviceData = viewportProDevicesDb[deviceKey];
 
@@ -1122,7 +1473,7 @@
 
                 applyScale();
 
-                const targetUrl = getUrl();
+                const targetUrl = isPreviewStarted ? getUrl() : 'about:blank';
                 let iframeUrl = targetUrl;
                 let isLocalhostUrl = false;
                 let targetPort = null;
@@ -1162,17 +1513,21 @@
                     deviceViewport.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-popups-to-escape-sandbox allow-storage-access-by-user-activation');
                 }
 
-                if (iframeUrl === 'about:blank') {
+                if (iframeUrl === 'about:blank' && !deviceConnectingScreen.classList.contains('show')) {
+                    // Only show splash if we're not actively connecting
                     devicePlaceholder.classList.add('show');
                     deviceViewport.style.opacity = '0';
                     deviceBlockedScreen.classList.remove('show');
-                } else {
+                    deviceUnreachableScreen.classList.remove('show');
+                } else if (iframeUrl !== 'about:blank') {
                     devicePlaceholder.classList.remove('show');
+                    hideConnecting();
 
                     if (!isLocalUrl) {
                         vscode.postMessage({ type: 'checkUrlHeaders', url: iframeUrl });
                     } else {
                         deviceBlockedScreen.classList.remove('show');
+                        deviceUnreachableScreen.classList.remove('show');
                         deviceViewport.style.opacity = '1';
                     }
                 }
@@ -1228,7 +1583,7 @@
                 }
                 deviceContainer.style.setProperty('--device-scale', scaleFactor);
                 if (badgeScaleText) {
-                    badgeScaleText.textContent = `Scale: ${Math.round(scaleFactor * 100)}%`;
+                    badgeScaleText.textContent = `${Math.round(scaleFactor * 100)}%`;
                 }
             }
 
@@ -1277,9 +1632,7 @@
                         }
                     }
                 } catch (e) {
-                    // Cross-origin secure fallback: use VS Code editor themes
-                    statusBarEl.style.backgroundColor = '';
-                    statusBarEl.style.color = '';
+                    // Cross-origin secure fallback: do not reset inline style, as we might rely on the postMessage fallback
                 }
             }
 
@@ -1315,6 +1668,12 @@
             // (It won't auto-boot the local proxy because portSelect is empty on load, 
             // and we disabled the auto-dispatch on port scan)
             updatePreview();
+            
+            // Remove preload class after rendering to enable future smooth transitions
+            setTimeout(() => {
+                document.body.classList.remove('preload');
+            }, 100);
+            
             // Signal to backend that we are ready to receive the active port list
             vscode.postMessage({ type: 'ready' });
         })();

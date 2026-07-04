@@ -59,3 +59,36 @@ export async function detectActivePorts(ports: number[]): Promise<number[]> {
 
     return activePorts;
 }
+
+/**
+ * Finds an available local port in the specified range.
+ * If all ports in the range are in use, it returns 0 (which falls back to a random port).
+ */
+export function findFreePortInRange(start: number, end: number): Promise<number> {
+    return new Promise((resolve) => {
+        let current = start;
+
+        const tryNext = () => {
+            if (current > end) {
+                resolve(0);
+                return;
+            }
+
+            const server = net.createServer();
+            server.unref();
+
+            server.once('error', () => {
+                current++;
+                tryNext();
+            });
+
+            server.listen({ port: current, host: '127.0.0.1' }, () => {
+                server.close(() => {
+                    resolve(current);
+                });
+            });
+        };
+
+        tryNext();
+    });
+}
