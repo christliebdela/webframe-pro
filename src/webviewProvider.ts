@@ -127,33 +127,12 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        const startIntervalScan = () => {
-            if (this._scanInterval) { return; }
-            this._scanInterval = setInterval(() => {
-                if (this._view && this._view.visible) {
-                    this.scanAndSendPorts(true); // silent background scan
-                }
-            }, 4000);
-        };
-
-        const stopIntervalScan = () => {
-            if (this._scanInterval) {
-                clearInterval(this._scanInterval);
-                this._scanInterval = undefined;
-            }
-        };
-
-        // Dispose interval on extension shutdown
-        this._context.subscriptions.push({
-            dispose: () => stopIntervalScan()
-        });
-
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
                 case 'ready': {
-                    // Webview DOM and listeners are ready. Safe to send initial ports.
-                    await this.scanAndSendPorts(false);
-                    startIntervalScan();
+                    // Webview DOM and listeners are ready.
+                    // DO NOT auto-scan ports on load per user request. 
+                    // User must click refresh manually.
                     break;
                 }
                 case 'refreshPorts': {
@@ -202,14 +181,10 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
             }
         });
 
-        // Scan ports and manage interval when sidebar visibility changes
+        // We no longer scan ports on visibility change.
+        // The user must manually scan or enter a port.
         webviewView.onDidChangeVisibility(() => {
-            if (webviewView.visible) {
-                this.scanAndSendPorts(true);
-                startIntervalScan();
-            } else {
-                stopIntervalScan();
-            }
+            // Do nothing on visibility change
         });
     }
 

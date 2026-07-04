@@ -84,6 +84,14 @@
                     </svg>
                 </button>
 
+                <!-- Screen Power Quick Toggle Button -->
+                <button class="info-bar-btn" id="btn-toggle-power" title="Turn Screen Off/On">
+                    <svg class="power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px; transition: color 0.2s ease;">
+                        <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                        <line x1="12" y1="2" x2="12" y2="12"></line>
+                    </svg>
+                </button>
+
                 <!-- Configurations Dropdown Popover -->
                 <div class="custom-dropdown" id="settings-dropdown">
                     <button class="info-bar-btn" id="btn-toggle-settings" title="Configurations">
@@ -110,7 +118,7 @@
                                     <label>Active Port</label>
                                     <div class="custom-dropdown form-select-container" id="popover-port-dropdown">
                                         <button type="button" class="form-select-trigger" id="popover-port-trigger">
-                                            <span id="popover-port-text">Scanning...</span>
+                                            <span id="popover-port-text">Select port...</span>
                                             <svg class="chevron-icon" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                         </button>
                                         <div class="dropdown-content form-select-content" id="popover-port-content">
@@ -123,7 +131,7 @@
                                     <input type="number" id="popover-custom-port" class="form-control" placeholder="e.g. 3000">
                                 </div>
                             </div>
-                            <div id="popover-no-ports-msg" class="info-text" style="display: none;">No active servers detected.</div>
+                            <div id="popover-no-ports-msg" class="info-text">Click "Refresh Scan" to detect servers.</div>
                             <button id="popover-refresh-ports-btn" class="btn btn-secondary">Refresh Scan</button>
                         </div>
 
@@ -158,7 +166,7 @@
                                 <img src="${logoUri}" alt="WebFrame Pro Logo" style="width: 80px; height: auto; margin-bottom: 16px;">
                                 <div class="placeholder-title">WebFrame Pro</div>
                                 <div class="placeholder-desc">Ready to Preview</div>
-                                <div class="placeholder-tip">Click the <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin:0 2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> gear icon in the toolbar to configure your local port.</div>
+                                <div class="placeholder-tip">Click the <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline-block; vertical-align:middle; margin:0 2px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> gear icon in the toolbar and select a port to start the preview.</div>
                             </div>
                         </div>
 
@@ -219,6 +227,8 @@
             <select id="popover-rotation-select">
                 <option value="portrait" selected>Portrait</option>
                 <option value="landscape">Landscape</option>
+                <option value="portrait-flipped">Portrait (Flipped)</option>
+                <option value="landscape-flipped">Landscape (Flipped)</option>
             </select>
             <select id="popover-scale-select">
                 <option value="50">50%</option>
@@ -238,6 +248,9 @@
     <script nonce="${nonce}">
         (function() {
             const vscode = acquireVsCodeApi();
+            
+            // State for continuous rotation animation
+            let currentFrameRotation = 0;
             
             // Injected device definitions database
             const viewportProDevicesDb = JSON.parse('${deviceDataMap}');
@@ -288,6 +301,7 @@
             const themeToggleBtn = document.getElementById('btn-toggle-theme');
             const orientationToggleBtn = document.getElementById('btn-toggle-orientation');
             const orientationToggleIcon = document.getElementById('orientation-toggle-icon');
+            const powerToggleBtn = document.getElementById('btn-toggle-power');
             const btnBackNav = document.getElementById('btn-back-nav');
             const btnForwardNav = document.getElementById('btn-forward-nav');
             const backdropEl = document.getElementById('popover-backdrop');
@@ -576,10 +590,10 @@
                     let speakerHtml = '';
                     if (key === 'iphone-12-pro') {
                         // Speaker is in the top bezel above the notch
-                        speakerHtml = `<rect x="${w / 2 - 20}" y="3" width="40" height="2" rx="1" fill="#151518" stroke="#333336" stroke-width="0.8" />`;
+                        speakerHtml = `<rect x="${w / 2 - 20}" y="3" width="40" height="2" rx="1" fill="#151518" stroke="#1f1f1f" stroke-width="0.8" />`;
                     } else {
                         // Speaker is inside the notch at the top
-                        speakerHtml = `<rect x="${w / 2 - 20}" y="${notchY + 5}" width="40" height="3.5" rx="1.75" fill="#151518" stroke="#333336" stroke-width="1" />`;
+                        speakerHtml = `<rect x="${w / 2 - 20}" y="${notchY + 5}" width="40" height="3.5" rx="1.75" fill="#151518" stroke="#1f1f1f" stroke-width="1" />`;
                     }
 
                     hardwareDetails += `
@@ -711,9 +725,10 @@
                  orientationToggleBtn.addEventListener('click', () => {
                      const rotationSelect = document.getElementById('popover-rotation-select');
                      if (rotationSelect) {
-                         const currentRotation = rotationSelect.value;
-                         const newRotation = currentRotation === 'portrait' ? 'landscape' : 'portrait';
-                         rotationSelect.value = newRotation;
+                         const order = ['portrait', 'landscape', 'portrait-flipped', 'landscape-flipped'];
+                         const currentIndex = order.indexOf(rotationSelect.value);
+                         const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % 4;
+                         rotationSelect.value = order[nextIndex];
                          rotationSelect.dispatchEvent(new Event('change'));
                      }
                  });
@@ -788,6 +803,19 @@
                 setTimeout(() => {
                     deviceViewport.src = currentSrc;
                 }, 50);
+            });
+
+            // Toggle screen power
+            let isScreenOff = false;
+            powerToggleBtn.addEventListener('click', () => {
+                isScreenOff = !isScreenOff;
+                if (isScreenOff) {
+                    deviceContainer.classList.add('screen-off');
+                    powerToggleBtn.style.color = 'var(--vscode-errorForeground, #f48771)';
+                } else {
+                    deviceContainer.classList.remove('screen-off');
+                    powerToggleBtn.style.color = '';
+                }
             });
 
             // Populate the custom dropdown on load
@@ -896,7 +924,8 @@
                         }
                         window.savedSelectedPort = null;
                         
-                        portSelect.dispatchEvent(new Event('change'));
+                        // We NO LONGER auto-dispatch 'change' event here so it doesn't auto-preview.
+                        // User must explicitly select a port to boot up the server preview.
                         break;
                     case 'urlHeadersResult':
                         if (message.url === getUrl()) {
@@ -952,7 +981,9 @@
                 if (!deviceData) return;
 
                 const metadata = deviceData.metadata;
-                const isLandscape = rotationSelect.value === 'landscape';
+                const rotationVal = rotationSelect.value;
+                const isLandscape = rotationVal.startsWith('landscape');
+                const isFlipped = rotationVal.endsWith('-flipped');
 
                 const w = metadata.width;
                 const h = metadata.height;
@@ -971,27 +1002,53 @@
                 setProp('--device-w', `${w}px`);
                 setProp('--device-h', `${h}px`);
 
+                const rotationTargetAngles = {
+                    'portrait': 0,
+                    'landscape': 90,
+                    'portrait-flipped': 180,
+                    'landscape-flipped': 270
+                };
+                
+                const targetAngle = rotationTargetAngles[rotationSelect.value] || 0;
+                let angleDiff = (targetAngle - (currentFrameRotation % 360) + 360) % 360;
+                if (angleDiff > 180) {
+                    angleDiff -= 360; // take shortest path backward if applicable
+                }
+                currentFrameRotation += angleDiff;
+
                 if (isLandscape) {
                     setProp('--container-w', `${h}px`);
                     setProp('--container-h', `${w}px`);
                     
-                    // Recalculate offsets for landscape mode
-                    const landscapeVx = h - (vy + vh);
-                    const landscapeVy = vx;
-                    setProp('--viewport-x', `${landscapeVx}px`);
-                    setProp('--viewport-y', `${landscapeVy}px`);
+                    if (isFlipped) {
+                        setProp('--viewport-x', `${vy}px`);
+                        setProp('--viewport-y', `${w - (vx + vw)}px`);
+                        setProp('--viewport-bottom', `${vx}px`);
+                    } else {
+                        setProp('--viewport-x', `${h - (vy + vh)}px`);
+                        setProp('--viewport-y', `${vx}px`);
+                        setProp('--viewport-bottom', `${w - (vx + vw)}px`);
+                    }
                     setProp('--viewport-w', `${vh}px`);
                     setProp('--viewport-h', `${vw}px`);
-                    setProp('--frame-rotation', 'rotate(90deg)');
                 } else {
                     setProp('--container-w', `${w}px`);
                     setProp('--container-h', `${h}px`);
-                    setProp('--viewport-x', `${vx}px`);
-                    setProp('--viewport-y', `${vy}px`);
+                    
+                    if (isFlipped) {
+                        setProp('--viewport-x', `${w - (vx + vw)}px`);
+                        setProp('--viewport-y', `${h - (vy + vh)}px`);
+                        setProp('--viewport-bottom', `${vy}px`);
+                    } else {
+                        setProp('--viewport-x', `${vx}px`);
+                        setProp('--viewport-y', `${vy}px`);
+                        setProp('--viewport-bottom', `${h - (vy + vh)}px`);
+                    }
                     setProp('--viewport-w', `${vw}px`);
                     setProp('--viewport-h', `${vh}px`);
-                    setProp('--frame-rotation', 'rotate(0deg)');
                 }
+                
+                setProp('--frame-rotation', `rotate(${currentFrameRotation}deg)`);
 
                 const radius = metadata.borderRadius || 0;
                 setProp('--viewport-radius', `${radius}px`);
@@ -1012,20 +1069,17 @@
 
                 // Rotate the orientation toggle icon based on active rotation state
                 if (orientationToggleIcon) {
-                    if (isLandscape) {
-                        orientationToggleIcon.style.transform = 'rotate(90deg)';
-                    } else {
-                        orientationToggleIcon.style.transform = 'rotate(0deg)';
-                    }
+                    orientationToggleIcon.style.transform = `rotate(${currentFrameRotation}deg)`;
                 }
 
                 // Display dynamic time format
-                statusTimeEl.textContent = deviceKey.includes('ipad') ? '9:41 AM' : '9:41';
+                updateClock();
 
                 // Set orientation, form-factor and theme attributes
                 const sbTheme = statusbarSelect.value;
                 deviceContainer.setAttribute('data-device-theme', sbTheme);
                 deviceContainer.setAttribute('data-is-landscape', isLandscape.toString());
+                deviceContainer.setAttribute('data-is-flipped', isFlipped.toString());
                 deviceContainer.setAttribute('data-is-phone', isPhone.toString());
 
                 // Set status bar theme class (fallback/transition styling helper)
@@ -1148,7 +1202,7 @@
 
                 const metadata = deviceData.metadata;
                 const scaleMode = scaleSelect.value;
-                const isLandscape = rotationSelect.value === 'landscape';
+                const isLandscape = rotationSelect.value.startsWith('landscape');
                 let scaleFactor = 1.0;
 
                 if (scaleMode === 'fit') {
@@ -1235,9 +1289,32 @@
             });
             setInterval(syncStatusBarColor, 600);
 
-            // Initialize preview on first load
-            updatePreview();
+            // Real-time PC clock for the status bar
+            function updateClock() {
+                if (!statusTimeEl) return;
+                const deviceKey = deviceSelect.value;
+                const now = new Date();
+                const hours = now.getHours();
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                
+                const isIpadOrTablet = deviceKey.includes('ipad') || deviceKey.includes('surface') || deviceKey.includes('nest');
+                
+                if (isIpadOrTablet) {
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    const displayHours = hours % 12 || 12;
+                    statusTimeEl.textContent = `${displayHours}:${minutes} ${ampm}`;
+                } else {
+                    const displayHours = hours.toString().padStart(2, '0');
+                    statusTimeEl.textContent = `${displayHours}:${minutes}`;
+                }
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
 
+            // Initialize preview on first load to render device chassis SVG
+            // (It won't auto-boot the local proxy because portSelect is empty on load, 
+            // and we disabled the auto-dispatch on port scan)
+            updatePreview();
             // Signal to backend that we are ready to receive the active port list
             vscode.postMessage({ type: 'ready' });
         })();

@@ -1,14 +1,7 @@
-# WebFrame Pro
+# <img src="resources/logo.png" width="28" alt="WebFrame Pro Logo" style="vertical-align: middle; margin-right: 4px;"> WebFrame Pro
 
-<!--
-<p align="left">
-  <img src="https://raw.githubusercontent.com/christliebdela/webframe-pro/main/media/vpp-banner.png" width="auto" height="auto" alt="WebFrame Pro Logo">
-</p>
--->
 
-<p align="left">
-  <img src="resources/screenshot.png" width="100%" height="auto" alt="WebFrame Pro Preview Screenshot">
-</p>
+![WebFrame Pro Preview Screenshot](resources/screenshot.png)
 
 
 ## The Pain Point

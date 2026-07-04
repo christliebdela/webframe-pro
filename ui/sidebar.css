@@ -539,7 +539,7 @@ body.vscode-light .workbench {
     height: var(--container-h);
     transform: scale(var(--device-scale, 1));
     transform-origin: center center;
-    transition: transform 0.15s ease-out;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 12px 24px var(--shadow-color);
     border-radius: var(--device-radius);
     background-color: #000;
@@ -559,7 +559,8 @@ body.vscode-light .workbench {
     border-radius: 0 0 calc(var(--viewport-radius) + 1px) calc(var(--viewport-radius) + 1px);
     background-color: #000000;
     z-index: 1;
-    transition: opacity 0.15s ease-in-out;
+    outline: none !important;
+    transition: opacity 0.15s ease-in-out, top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='8' fill='rgba(128,128,128,0.45)' stroke='rgba(80,80,80,0.7)' stroke-width='1.5'/></svg>") 12 12, auto;
 }
 
@@ -572,8 +573,10 @@ body.vscode-light .workbench {
     height: calc(var(--viewport-h) + 2px - var(--status-bar-h, 0px));
     border-radius: 0 0 calc(var(--viewport-radius) + 1px) calc(var(--viewport-radius) + 1px);
     border: 1.5px solid rgba(255, 255, 255, 0.05); /* clean light-glass edge border */
+    border-top: none;
     box-sizing: border-box;
     pointer-events: none;
+    transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 5;
 }
 
@@ -589,6 +592,7 @@ body.vscode-light .workbench {
     transform: translate(-50%, -50%) var(--frame-rotation, rotate(0deg));
     transform-origin: center center;
     pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10;
 }
 
@@ -610,24 +614,60 @@ body.vscode-light .workbench {
     font-size: var(--status-bar-fs, 10px);
     font-weight: 600;
     user-select: none;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color 0.15s, color 0.15s, top 0.25s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: var(--viewport-radius) var(--viewport-radius) 0 0;
 }
 
-/* Hide status bar on phones in landscape mode to maximize viewport height */
+/* Hide status bar smoothly on phones in landscape mode to maximize viewport height */
 #device-container[data-is-landscape="true"][data-is-phone="true"] #device-status-bar {
-    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Flipped Orientation Support */
+#device-container[data-is-flipped="true"] #device-status-bar {
+    top: auto;
+    bottom: var(--viewport-bottom, var(--viewport-y));
+}
+
+#device-container[data-is-flipped="true"][data-is-landscape="true"] #device-status-bar {
+    border-radius: 0 0 var(--viewport-radius) var(--viewport-radius);
+}
+
+#device-container[data-is-flipped="true"][data-is-landscape="false"] #device-status-bar {
+    transform: rotate(180deg);
+}
+
+#device-container[data-is-flipped="true"][data-is-landscape="false"] .device-home-bar {
+    bottom: auto;
+    top: var(--viewport-y);
+}
+
+/* Adjust viewport and overlays for flipped orientation where status bar is at the bottom */
+#device-container[data-is-flipped="true"] #device-viewport,
+#device-container[data-is-flipped="true"] #device-screen-overlay,
+#device-container[data-is-flipped="true"] #device-placeholder,
+#device-container[data-is-flipped="true"] .device-overlay-screen {
+    top: calc(var(--viewport-y) - 1px);
+    border-radius: calc(var(--viewport-radius) + 1px) calc(var(--viewport-radius) + 1px) 0 0;
+}
+
+#device-container[data-is-flipped="true"] #device-screen-overlay {
+    border-top: 1.5px solid rgba(255, 255, 255, 0.05);
+    border-bottom: none;
 }
 
 /* Device Theme Styling: Light, Dark, or Auto-matching VS Code theme */
 
 /* Default / Dark Mode */
 #device-status-bar {
-    background-color: #000000;
+    background-color: #0b0b0c;
     color: #ffffff;
 }
 #device-viewport {
-    background-color: #000000;
+    background-color: #0b0b0c;
 }
 
 /* Forced Light Mode or Auto-matching VS Code Light theme */
@@ -645,7 +685,7 @@ body.vscode-light [data-device-theme="auto"] #device-viewport {
 /* Forced Dark Mode or Auto-matching VS Code Dark theme */
 [data-device-theme="dark"] #device-status-bar,
 body.vscode-dark [data-device-theme="auto"] #device-status-bar {
-    background-color: #000000;
+    background-color: #0b0b0c;
     color: #ffffff;
 }
 
@@ -665,6 +705,7 @@ body.vscode-dark [data-device-theme="auto"] #device-status-bar {
     background-color: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .home-bar-pill {
@@ -956,8 +997,9 @@ body.vscode-light [data-device-theme="auto"] .home-bar-pill {
     animation: spin 1s linear infinite;
 }
 
-/* Device Screen Placeholder Overlay */
-#device-placeholder {
+/* Device Screen Placeholder Overlay & Blocked Screen */
+#device-placeholder,
+.device-overlay-screen {
     position: absolute;
     left: calc(var(--viewport-x) - 1px);
     top: calc(var(--viewport-y) - 1px + var(--status-bar-h, 0px));
@@ -975,22 +1017,27 @@ body.vscode-light [data-device-theme="auto"] .home-bar-pill {
     text-align: center;
     font-family: inherit;
     pointer-events: auto;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color 0.15s, color 0.15s, top 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1), height 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-device-theme="light"] #device-placeholder,
-body.vscode-light [data-device-theme="auto"] #device-placeholder {
+[data-device-theme="light"] .device-overlay-screen,
+body.vscode-light [data-device-theme="auto"] #device-placeholder,
+body.vscode-light [data-device-theme="auto"] .device-overlay-screen {
     background-color: #ffffff;
     color: #858585;
 }
 
 [data-device-theme="dark"] #device-placeholder,
-body.vscode-dark [data-device-theme="auto"] #device-placeholder {
+[data-device-theme="dark"] .device-overlay-screen,
+body.vscode-dark [data-device-theme="auto"] #device-placeholder,
+body.vscode-dark [data-device-theme="auto"] .device-overlay-screen {
     background-color: #0b0b0c;
     color: #858585;
 }
 
-#device-placeholder.show {
+#device-placeholder.show,
+.device-overlay-screen.show {
     display: flex;
 }
 
@@ -1277,4 +1324,15 @@ body.vscode-dark [data-device-theme="auto"] #device-placeholder {
     margin-top: 6px;
     border-top: 1px solid var(--vscode-dropdown-border, rgba(255, 255, 255, 0.06));
     padding-top: 8px;
+}
+
+/* Screen Off Power State */
+#device-container.screen-off #device-viewport,
+#device-container.screen-off #device-status-bar,
+#device-container.screen-off #device-home-bar,
+#device-container.screen-off #device-placeholder,
+#device-container.screen-off #device-blocked-screen {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
 }
