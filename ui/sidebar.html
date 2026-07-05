@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource} data: blob:; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-src *; connect-src *;">
     <link rel="stylesheet" href="${styleUri}?v=${nonce}">
+    <script nonce="${nonce}" src="${html2canvasUri}"></script>
     <title>WebFrame Pro</title>
 </head>
 <body class="preload">
@@ -91,6 +92,24 @@
                         <line x1="12" y1="2" x2="12" y2="12"></line>
                     </svg>
                 </button>
+
+                <!-- Screenshot Dropdown -->
+                <div class="custom-dropdown" id="screenshot-dropdown">
+                    <button class="info-bar-btn" id="btn-screenshot" data-tooltip="Capture Screenshot">
+                        <svg class="camera-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                    </button>
+                    <div class="dropdown-content" id="screenshot-dropdown-content" style="right: 0; left: auto; min-width: 140px;">
+                        <div class="dropdown-item" id="btn-capture-screen">
+                            <span class="dropdown-item-label">Screen Only</span>
+                        </div>
+                        <div class="dropdown-item" id="btn-capture-mockup">
+                            <span class="dropdown-item-label">Device + Screen</span>
+                        </div>
+                    </div>
+                </div>
  
                 <!-- Configurations Dropdown Popover -->
                 <div class="custom-dropdown" id="settings-dropdown">
@@ -511,6 +530,12 @@
             const btnBackNav = document.getElementById('btn-back-nav');
             const btnForwardNav = document.getElementById('btn-forward-nav');
             const backdropEl = document.getElementById('popover-backdrop');
+
+            // Screenshot elements
+            const btnScreenshot = document.getElementById('btn-screenshot');
+            const screenshotDropdownContent = document.getElementById('screenshot-dropdown-content');
+            const btnCaptureScreen = document.getElementById('btn-capture-screen');
+            const btnCaptureMockup = document.getElementById('btn-capture-mockup');
 
             // Cache of running proxy ports keyed by target localhost ports
             const activeProxies = {};
@@ -1440,13 +1465,21 @@
                 // Update theme quick toggle button icon dynamically
                 if (themeToggleBtn) {
                     const activeLight = sbTheme === 'light' || (sbTheme === 'auto' && document.body.classList.contains('vscode-light'));
+                    const tooltipText = activeLight ? "Switch to Dark Theme" : "Switch to Light Theme";
+                    themeToggleBtn.setAttribute('data-tooltip', tooltipText);
+                    themeToggleBtn.removeAttribute('title');
+                    
+                    const activeTooltip = document.getElementById('vpp-custom-tooltip');
+                    if (activeTooltip && activeTooltip.style.opacity === '1') {
+                        activeTooltip.textContent = tooltipText;
+                    }
+
                     if (activeLight) {
                         themeToggleBtn.innerHTML = `
                             <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
                                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                             </svg>
                         `;
-                        themeToggleBtn.title = "Switch to Dark Theme";
                     } else {
                         themeToggleBtn.innerHTML = `
                             <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:10px; height:10px;">
@@ -1461,7 +1494,6 @@
                                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                             </svg>
                         `;
-                        themeToggleBtn.title = "Switch to Light Theme";
                     }
                 }
 
@@ -1613,11 +1645,40 @@
                     const iframeDoc = iframeWindow.document;
                     if (!iframeDoc || !iframeDoc.body) return;
 
-                    const bodyStyle = iframeWindow.getComputedStyle(iframeDoc.body);
-                    const bg = bodyStyle.backgroundColor;
+                    let bg = null;
                     
+                    // 1. Try body
+                    const bodyBg = iframeWindow.getComputedStyle(iframeDoc.body).backgroundColor;
+                    if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') {
+                        bg = bodyBg;
+                    }
+                    
+                    // 2. Try html (documentElement)
+                    if (!bg && iframeDoc.documentElement) {
+                        const htmlBg = iframeWindow.getComputedStyle(iframeDoc.documentElement).backgroundColor;
+                        if (htmlBg && htmlBg !== 'rgba(0, 0, 0, 0)' && htmlBg !== 'transparent') {
+                            bg = htmlBg;
+                        }
+                    }
+                    
+                    // 3. Try main layout child elements of body
+                    if (!bg) {
+                        const children = iframeDoc.body.children;
+                        for (let i = 0; i < children.length; i++) {
+                            const child = children[i];
+                            const tag = child.tagName;
+                            if (tag !== 'SCRIPT' && tag !== 'STYLE' && tag !== 'LINK') {
+                                const childBg = iframeWindow.getComputedStyle(child).backgroundColor;
+                                if (childBg && childBg !== 'rgba(0, 0, 0, 0)' && childBg !== 'transparent') {
+                                    bg = childBg;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     // Set status bar background color to match webpage body
-                    if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                    if (bg) {
                         statusBarEl.style.backgroundColor = bg;
                         
                         // Parse RGB components to compute contrast brightness (YIQ formula)
@@ -1636,11 +1697,74 @@
                 }
             }
 
+            let localTransitionInterval = null;
+            let localTransitionTimeout = null;
+
+            function startLocalTransitionSync() {
+                if (localTransitionInterval) clearInterval(localTransitionInterval);
+                if (localTransitionTimeout) clearTimeout(localTransitionTimeout);
+
+                localTransitionInterval = setInterval(syncStatusBarColor, 30);
+                localTransitionTimeout = setTimeout(() => {
+                    clearInterval(localTransitionInterval);
+                    localTransitionInterval = null;
+                }, 1000);
+            }
+
+            let iframeObserver = null;
+
+            function setupIframeObserver() {
+                try {
+                    if (iframeObserver) iframeObserver.disconnect();
+
+                    const iframeWindow = deviceViewport.contentWindow;
+                    if (!iframeWindow) return;
+                    const iframeDoc = iframeWindow.document;
+                    if (!iframeDoc) return;
+
+                    iframeObserver = new MutationObserver((mutations) => {
+                        let shouldSync = false;
+                        for (let i = 0; i < mutations.length; i++) {
+                            const m = mutations[i];
+                            if (m.type === 'attributes') {
+                                const target = m.target;
+                                if (target === iframeDoc.body || target === iframeDoc.documentElement || target.tagName === 'DIV' || target.tagName === 'MAIN') {
+                                    shouldSync = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (shouldSync) {
+                            syncStatusBarColor();
+                            startLocalTransitionSync();
+                        }
+                    });
+
+                    // Observe all attribute changes in document subtree (catches theme changes on container elements)
+                    iframeObserver.observe(iframeDoc.documentElement, { attributes: true, subtree: true });
+
+                    // Hook into CSS transitions inside the iframe
+                    iframeWindow.addEventListener('transitionstart', (e) => {
+                        const target = e.target;
+                        if (target && (target === iframeDoc.body || target === iframeDoc.documentElement || target.tagName === 'DIV' || target.tagName === 'MAIN')) {
+                            if (e.propertyName && (e.propertyName.includes('background') || e.propertyName.includes('color'))) {
+                                syncStatusBarColor();
+                                startLocalTransitionSync();
+                            }
+                        }
+                    });
+                } catch (e) {
+                    // Cross-origin: will throw, ignore and rely on postMessage 'vpp-bg-color'
+                }
+            }
+
             // Sync background colors on load
             deviceViewport.addEventListener('load', () => {
                 syncStatusBarColor();
+                startLocalTransitionSync();
+                setupIframeObserver();
             });
-            setInterval(syncStatusBarColor, 600);
+            setInterval(syncStatusBarColor, 2000);
 
             // Real-time PC clock for the status bar
             function updateClock() {
@@ -1664,9 +1788,500 @@
             updateClock();
             setInterval(updateClock, 1000);
 
+            // Screenshot Dropdown controls
+            function closeScreenshotDropdown() {
+                if (screenshotDropdownContent) {
+                    screenshotDropdownContent.classList.remove('show');
+                }
+                const dropdown = document.getElementById('screenshot-dropdown');
+                if (dropdown) {
+                    dropdown.classList.remove('open');
+                }
+            }
+
+            function toggleScreenshotDropdown(e) {
+                e.stopPropagation();
+                closeDropdown();
+                closeSettings();
+                closeAllCustomSelects();
+                const isOpen = screenshotDropdownContent.classList.contains('show');
+                if (isOpen) {
+                    closeScreenshotDropdown();
+                } else {
+                    screenshotDropdownContent.classList.add('show');
+                    const dropdown = document.getElementById('screenshot-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.add('open');
+                    }
+                    showBackdrop(closeScreenshotDropdown);
+                }
+            }
+
+            if (btnScreenshot) {
+                btnScreenshot.addEventListener('click', toggleScreenshotDropdown);
+            }
+            customSelectClosers.push(closeScreenshotDropdown);
+
+            // Client-side screenshot engine
+            let isCapturing = false;
+
+            function showToast(message, type = 'info') {
+                let toast = document.getElementById('vpp-toast');
+                if (!toast) {
+                    toast = document.createElement('div');
+                    toast.id = 'vpp-toast';
+                    toast.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        left: 50%;
+                        transform: translateX(-50%) translateY(20px);
+                        background: rgba(15, 15, 15, 0.85);
+                        border: 1px solid rgba(255, 255, 255, 0.15);
+                        backdrop-filter: blur(8px);
+                        -webkit-backdrop-filter: blur(8px);
+                        color: #ffffff;
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        font-size: 10px;
+                        font-weight: 500;
+                        z-index: 100000;
+                        opacity: 0;
+                        transition: opacity 0.2s, transform 0.2s;
+                        pointer-events: none;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+                    `;
+                    document.body.appendChild(toast);
+                }
+                toast.textContent = message;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+                
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateX(-50%) translateY(20px)';
+                }, 3000);
+            }
+
+            function drawDeviceFrameDirect(ctx, key, w, h, rx, dev) {
+                const btnColor = '#2d2d30';
+                const btnStroke = '#4e4e52';
+
+                function drawRectButton(x, y, bw, bh, br, fill, stroke) {
+                    ctx.save();
+                    ctx.fillStyle = fill || btnColor;
+                    ctx.strokeStyle = stroke || btnStroke;
+                    ctx.lineWidth = 0.5;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, bw, bh, br);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 1. Draw Hardware Buttons (under outer bezel border)
+                if (key.includes('ipad')) {
+                    drawRectButton(w - 60, -3, 40, 3.5, 1);
+                    drawRectButton(w, 80, 3.5, 30, 1);
+                    drawRectButton(w, 120, 3.5, 30, 1);
+                } else if (key.includes('iphone') && key !== 'iphone-se') {
+                    drawRectButton(-3, 100, 3.5, 12, 1.5);
+                    drawRectButton(-3, 135, 3.5, 24, 1.5);
+                    drawRectButton(-3, 175, 3.5, 24, 1.5);
+                    drawRectButton(w, 150, 3.5, 40, 2);
+                    
+                    if (key.includes('iphone-16')) {
+                        drawRectButton(w, h - 220, 1.5, 26, 1, '#1b1b1d', '#3c3c3e');
+                    }
+                } else if (key === 'iphone-se') {
+                    drawRectButton(-2.5, 80, 3, 10, 1);
+                    drawRectButton(-2.5, 110, 3, 16, 1);
+                    drawRectButton(-2.5, 140, 3, 16, 1);
+                    drawRectButton(w, 115, 3, 30, 1.5);
+                } else if (key.includes('pixel') || key.includes('galaxy')) {
+                    drawRectButton(w, 130, 3, 22, 1.5);
+                    drawRectButton(w, 170, 3, 45, 2);
+                } else if (key === 'surface-pro-7') {
+                    drawRectButton(40, -3, 35, 3.5, 1);
+                    drawRectButton(90, -3, 45, 3.5, 1);
+                }
+
+                // 2. Draw Main Frame Bezel Path (fill evenodd)
+                const outerPathStr = `M ${rx} 2 h ${w - 2 * rx} a ${rx} ${rx} 0 0 1 ${rx} ${rx} v ${h - 2 * rx - 4} a ${rx} ${rx} 0 0 1 -${rx} ${rx} h -${w - 2 * rx} a ${rx} ${rx} 0 0 1 -${rx} -${rx} v -${h - 2 * rx - 4} a ${rx} ${rx} 0 0 1 ${rx} -${rx} Z`;
+                
+                const vx = dev.viewportX;
+                const vy = dev.viewportY;
+                const vw = dev.viewportWidth;
+                const vh = dev.viewportHeight;
+                const vr = dev.borderRadius || 0;
+
+                let innerPathStr = '';
+                if (vr > 0) {
+                    innerPathStr = `M ${vx + vr} ${vy} h ${vw - 2 * vr} a ${vr} ${vr} 0 0 1 ${vr} ${vr} v ${vh - 2 * vr} a ${vr} ${vr} 0 0 1 -${vr} ${vr} h -${vw - 2 * vr} a ${vr} ${vr} 0 0 1 -${vr} -${vr} v -${vh - 2 * vr} a ${vr} ${vr} 0 0 1 ${vr} -${vr} Z`;
+                } else {
+                    innerPathStr = `M ${vx} ${vy} h ${vw} v ${vh} h -${vw} Z`;
+                }
+
+                const mainFramePath = new Path2D(`${outerPathStr} ${innerPathStr}`);
+                ctx.save();
+                ctx.fillStyle = '#000000';
+                ctx.fill(mainFramePath, 'evenodd');
+                ctx.restore();
+
+                // 3. Draw Outer Bezel Thin Border Outline
+                ctx.save();
+                ctx.strokeStyle = '#77777a';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(1.5, 1.5, w - 3, h - 3, rx);
+                ctx.stroke();
+                ctx.restore();
+
+                // 4. Draw Hardware Details (Notch, Dynamic Island, Front Camera holes, Speakers)
+                ctx.save();
+                if (key.includes('iphone-16') || key.includes('iphone-14-promax')) {
+                    const islandW = key.includes('pro') ? 115 : 100;
+                    const islandH = 28;
+                    const islandX = (w - islandW) / 2;
+                    const islandY = vy + 12;
+                    
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.roundRect(islandX, islandY, islandW, islandH, 14);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#111113';
+                    ctx.beginPath();
+                    ctx.arc(islandX + islandW - 20, islandY + 14, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else if (key === 'iphone-11' || key === 'iphone-12-pro') {
+                    const notchW = key === 'iphone-12-pro' ? 140 : 180;
+                    const notchX = (w - notchW) / 2;
+                    const notchY = vy;
+                    
+                    const notchPath = new Path2D(`M ${notchX} ${notchY - 3} v 19 a 14 14 0 0 0 14 14 h ${notchW - 28} a 14 14 0 0 0 14 -14 v -19`);
+                    ctx.fillStyle = '#000000';
+                    ctx.fill(notchPath);
+                    
+                    ctx.fillStyle = '#151518';
+                    ctx.strokeStyle = '#1f1f1f';
+                    if (key === 'iphone-12-pro') {
+                        ctx.lineWidth = 0.8;
+                        ctx.beginPath();
+                        ctx.roundRect(w / 2 - 20, 3, 40, 2, 1);
+                        ctx.fill();
+                        ctx.stroke();
+                    } else {
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect(w / 2 - 20, notchY + 5, 40, 3.5, 1.75);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                    
+                    ctx.fillStyle = '#111113';
+                    ctx.beginPath();
+                    ctx.arc(w / 2 + (key === 'iphone-12-pro' ? 20 : 35), notchY + 16, 3.5, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else if (key === 'iphone-se') {
+                    ctx.strokeStyle = '#77777a';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.roundRect(w / 2 - 25, 42, 50, 4, 2);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(w / 2 - 45, 44, 4, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(w / 2, h - 45, 22, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } else if (key === 'pixel-9' || key === 'galaxy-a55' || key === 'galaxy-s25' || key === 'galaxy-s20-ultra') {
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(w / 2, vy + 16, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+                } else if (key === 'pixel-fold') {
+                    ctx.strokeStyle = '#555557';
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(w / 2, vy);
+                    ctx.lineTo(w / 2, vy + vh);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+                ctx.restore();
+            }
+
+            async function compileMockupScreenshot(screenDataUrl) {
+                try {
+                    const getProp = (name) => {
+                        const val = getComputedStyle(deviceContainer).getPropertyValue(name);
+                        return parseFloat(val) || 0;
+                    };
+                    const containerW = getProp('--container-w');
+                    const containerH = getProp('--container-h');
+                    const devW = getProp('--device-w');
+                    const devH = getProp('--device-h');
+                    const viewW = getProp('--viewport-w');
+                    const viewH = getProp('--viewport-h');
+                    const viewX = getProp('--viewport-x');
+                    const viewY = getProp('--viewport-y');
+                    const statusBarH = getProp('--status-bar-h') || 24;
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = containerW;
+                    canvas.height = containerH;
+                    const ctx = canvas.getContext('2d');
+
+                    // 1. Clip to rounded viewport to prevent any corner overflows
+                    ctx.save();
+                    ctx.beginPath();
+                    const activeDeviceDataForClip = viewportProDevicesDb[deviceSelect.value];
+                    const vr = activeDeviceDataForClip ? activeDeviceDataForClip.metadata.borderRadius : 0;
+                    ctx.roundRect(viewX, viewY, viewW, viewH, vr);
+                    ctx.clip();
+                    
+                    const statusBarEl = document.getElementById('device-status-bar');
+                    const hasStatusBar = statusBarEl && getComputedStyle(statusBarEl).display !== 'none';
+                    const activeViewY = hasStatusBar ? (viewY + statusBarH) : viewY;
+                    const activeViewH = hasStatusBar ? (viewH - statusBarH) : viewH;
+
+                    // Draw screen content
+                    const imgScreen = new Image();
+                    imgScreen.src = screenDataUrl;
+                    await new Promise(resolve => imgScreen.onload = resolve);
+                    ctx.drawImage(imgScreen, viewX, activeViewY, viewW, activeViewH);
+
+                    // 2. Draw status bar overlay directly using Canvas 2D to avoid html2canvas taint/errors in webviews
+                    if (statusBarEl && getComputedStyle(statusBarEl).display !== 'none') {
+                        const sbColor = getComputedStyle(statusBarEl).color || '#000000';
+                        const sbBg = getComputedStyle(statusBarEl).backgroundColor;
+                        if (sbBg && sbBg !== 'rgba(0, 0, 0, 0)' && sbBg !== 'transparent') {
+                            ctx.fillStyle = sbBg;
+                            ctx.fillRect(viewX, viewY, viewW, statusBarH);
+                        }
+
+                        // Time text
+                        const timeEl = document.getElementById('status-time');
+                        const timeText = timeEl ? timeEl.textContent : '9:41';
+                        ctx.save();
+                        ctx.fillStyle = sbColor;
+                        ctx.font = '600 12px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(timeText, viewX + 24, viewY + statusBarH / 2 + 1);
+                        ctx.restore();
+
+                        // Battery
+                        ctx.save();
+                        ctx.strokeStyle = sbColor;
+                        ctx.fillStyle = sbColor;
+                        ctx.lineWidth = 1;
+                        const batX = viewX + viewW - 32;
+                        const batY = viewY + (statusBarH - 10) / 2;
+                        ctx.beginPath();
+                        ctx.roundRect(batX, batY, 18, 9, 2);
+                        ctx.stroke();
+                        ctx.fillRect(batX + 2, batY + 2, 11, 5);
+                        ctx.fillRect(batX + 18, batY + 3, 1.5, 3);
+                        ctx.restore();
+
+                        // Wifi
+                        ctx.save();
+                        ctx.strokeStyle = sbColor;
+                        ctx.fillStyle = sbColor;
+                        ctx.lineWidth = 1.2;
+                        const wifiX = viewX + viewW - 50;
+                        const wifiY = viewY + (statusBarH) / 2 + 2;
+                        ctx.beginPath();
+                        ctx.arc(wifiX, wifiY, 1.5, 0, 2 * Math.PI);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(wifiX, wifiY, 5, -0.75 * Math.PI, -0.25 * Math.PI);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(wifiX, wifiY, 9, -0.75 * Math.PI, -0.25 * Math.PI);
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Signal
+                        ctx.save();
+                        ctx.fillStyle = sbColor;
+                        const sigX = viewX + viewW - 68;
+                        const sigY = viewY + (statusBarH - 8) / 2;
+                        ctx.fillRect(sigX, sigY + 6, 2, 2);
+                        ctx.fillRect(sigX + 3, sigY + 4, 2, 4);
+                        ctx.fillRect(sigX + 6, sigY + 2, 2, 6);
+                        ctx.fillRect(sigX + 9, sigY, 2, 8);
+                        ctx.restore();
+                    }
+
+                    // 3. Draw home indicator bar overlay directly using Canvas 2D
+                    const homeBarEl = document.getElementById('device-home-bar');
+                    if (homeBarEl && getComputedStyle(homeBarEl).display !== 'none') {
+                        const homeBarH = homeBarEl.offsetHeight || 20;
+                        const pillEl = homeBarEl.querySelector('.home-bar-pill');
+                        const pillColor = pillEl ? getComputedStyle(pillEl).backgroundColor : '#ffffff';
+                        
+                        ctx.save();
+                        ctx.fillStyle = pillColor;
+                        const pillW = 120;
+                        const pillH = 5;
+                        const pillX = viewX + (viewW - pillW) / 2;
+                        const pillY = (containerH - viewY - homeBarH) + (homeBarH - pillH) / 2;
+                        ctx.beginPath();
+                        ctx.roundRect(pillX, pillY, pillW, pillH, 2.5);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+
+                    ctx.restore(); // Remove clipping mask
+
+                    // 4. Draw device frame bezel on top directly using Canvas 2D vectors
+                    // to prevent drawing dynamic SVG data URIs, which taints the canvas in some security sandboxes.
+                    const deviceKey = deviceSelect.value;
+                    const activeDeviceData = viewportProDevicesDb[deviceKey];
+                    if (activeDeviceData) {
+                        ctx.save();
+                        ctx.translate(containerW / 2, containerH / 2);
+                        ctx.rotate(currentFrameRotation * Math.PI / 180);
+                        ctx.translate(-(devW + 12) / 2, -(devH + 12) / 2);
+                        ctx.translate(6, 6); // Offset by -6,-6 margins from viewBox padding
+
+                        const devRadius = deviceKey === 'iphone-se' ? 36 : (activeDeviceData.metadata.borderRadius > 0 ? activeDeviceData.metadata.borderRadius + activeDeviceData.metadata.viewportX : 10);
+
+                        drawDeviceFrameDirect(ctx, deviceKey, devW, devH, devRadius, activeDeviceData.metadata);
+                        ctx.restore();
+                    }
+
+                    const finalDataUrl = canvas.toDataURL('image/png');
+                    const activeDeviceDataForName = viewportProDevicesDb[deviceKey];
+                    const deviceName = activeDeviceDataForName ? activeDeviceDataForName.metadata.name : '';
+                    vscode.postMessage({ type: 'saveScreenshot', dataUrl: finalDataUrl, deviceName: deviceName });
+                    isCapturing = false;
+                } catch (err) {
+                    showToast("Mockup generation failed: " + String(err), "error");
+                    isCapturing = false;
+                }
+            }
+
+            async function captureScreenshot(mode) {
+                if (isCapturing) return;
+                isCapturing = true;
+                showToast("Generating screenshot...", "info");
+
+                try {
+                    let isSameOrigin = false;
+                    try {
+                        const test = deviceViewport.contentWindow.document;
+                        isSameOrigin = true;
+                    } catch (e) {
+                        isSameOrigin = false;
+                    }
+
+                    if (isSameOrigin) {
+                        const iframeWindow = deviceViewport.contentWindow;
+                        const iframeDoc = iframeWindow.document;
+                        if (!iframeDoc || !iframeDoc.body) {
+                            throw new Error("Iframe document not loaded");
+                        }
+                        
+                        if (!window.html2canvas) {
+                            throw new Error("html2canvas library is not loaded");
+                        }
+
+                        const width = iframeWindow.innerWidth;
+                        const height = iframeWindow.innerHeight;
+                        const scrollX = iframeWindow.scrollX || iframeWindow.pageXOffset || 0;
+                        const scrollY = iframeWindow.scrollY || iframeWindow.pageYOffset || 0;
+
+                        const portInput = document.getElementById('port-input');
+                        const targetPort = portInput ? (parseInt(portInput.value) || 3000) : 3000;
+                        const proxyPort = activeProxies[targetPort];
+                        const proxyUrl = proxyPort ? `http://localhost:${proxyPort}/vpp-image-proxy` : undefined;
+
+                        const canvas = await window.html2canvas(iframeDoc.documentElement, {
+                            useCORS: true,
+                            allowTaint: false,
+                            imageTimeout: 5000,
+                            logging: false,
+                            proxy: proxyUrl,
+                            backgroundColor: null,
+                            scale: window.devicePixelRatio || 2,
+                            width: width,
+                            height: height,
+                            scrollX: scrollX,
+                            scrollY: scrollY,
+                            windowWidth: width,
+                            windowHeight: height,
+                            x: scrollX,
+                            y: scrollY
+                        });
+                        
+                        const screenDataUrl = canvas.toDataURL('image/png');
+                        if (mode === 'screen') {
+                            const dKey = deviceSelect.value;
+                            const activeDev = viewportProDevicesDb[dKey];
+                            const dName = activeDev ? activeDev.metadata.name : '';
+                            vscode.postMessage({ type: 'saveScreenshot', dataUrl: screenDataUrl, deviceName: dName });
+                            isCapturing = false;
+                        } else {
+                            await compileMockupScreenshot(screenDataUrl);
+                        }
+                    } else {
+                        const onScreenshotMessage = async (e) => {
+                            if (e.data && e.data.type === 'vpp-screenshot-data') {
+                                window.removeEventListener('message', onScreenshotMessage);
+                                if (mode === 'screen') {
+                                    const dKey = deviceSelect.value;
+                                    const activeDev = viewportProDevicesDb[dKey];
+                                    const dName = activeDev ? activeDev.metadata.name : '';
+                                    vscode.postMessage({ type: 'saveScreenshot', dataUrl: e.data.dataUrl, deviceName: dName });
+                                    isCapturing = false;
+                                } else {
+                                    await compileMockupScreenshot(e.data.dataUrl);
+                                }
+                            } else if (e.data && e.data.type === 'vpp-screenshot-error') {
+                                window.removeEventListener('message', onScreenshotMessage);
+                                showToast("Error: " + e.data.error, "error");
+                                isCapturing = false;
+                            }
+                        };
+                        window.addEventListener('message', onScreenshotMessage);
+                        
+                        setTimeout(() => {
+                            window.removeEventListener('message', onScreenshotMessage);
+                            if (isCapturing) {
+                                showToast("Screenshot request timed out", "error");
+                                isCapturing = false;
+                            }
+                        }, 8000);
+
+                        deviceViewport.contentWindow.postMessage({ type: 'vpp-request-screenshot' }, '*');
+                    }
+                } catch (err) {
+                    showToast("Failed: " + String(err), "error");
+                    isCapturing = false;
+                }
+            }
+
+            if (btnCaptureScreen) {
+                btnCaptureScreen.addEventListener('click', () => {
+                    closeScreenshotDropdown();
+                    captureScreenshot('screen');
+                });
+            }
+            if (btnCaptureMockup) {
+                btnCaptureMockup.addEventListener('click', () => {
+                    closeScreenshotDropdown();
+                    captureScreenshot('mockup');
+                });
+            }
+
             // Initialize preview on first load to render device chassis SVG
-            // (It won't auto-boot the local proxy because portSelect is empty on load, 
-            // and we disabled the auto-dispatch on port scan)
             updatePreview();
             
             // Remove preload class after rendering to enable future smooth transitions

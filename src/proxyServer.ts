@@ -1,6 +1,9 @@
 import * as http from 'http';
+import * as https from 'https';
 import * as net from 'net';
 import * as zlib from 'zlib';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface ProxyServer {
     port: number;
@@ -17,9 +20,123 @@ function rewriteCookies(cookies: string[]): string[] {
     });
 }
 
-export function createProxyServer(targetPort: number, port: number = 0): Promise<ProxyServer> {
+export function createProxyServer(targetPort: number, port: number = 0, extensionPath?: string): Promise<ProxyServer> {
     return new Promise((resolve, reject) => {
         const server = http.createServer((req, res) => {
+            if (req.url && req.url.startsWith('/vpp-image-proxy')) {
+                try {
+                    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+                    const targetUrlStr = parsedUrl.searchParams.get('url');
+                    const callback = parsedUrl.searchParams.get('callback');
+                    const responseType = parsedUrl.searchParams.get('responseType');
+
+                    if (targetUrlStr) {
+                        const fetchWithRedirects = (urlStr: string, depth = 0) => {
+                            if (depth > 5) {
+                                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                                res.end('Too many redirects');
+                                return;
+                            }
+
+                            try {
+                                const targetUrl = new URL(urlStr);
+                                const isHttps = targetUrl.protocol === 'https:';
+                                const requester = isHttps ? https : http;
+                                
+                                const reqOpts = {
+                                    headers: {
+                                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                                        'Accept-Encoding': 'identity'
+                                    },
+                                    rejectUnauthorized: false
+                                };
+                                
+                                const proxyReq = requester.get(urlStr, reqOpts, (proxyRes: any) => {
+                                    const statusCode = proxyRes.statusCode || 200;
+                                    
+                                    // Handle HTTP Redirects
+                                    if ((statusCode === 301 || statusCode === 302 || statusCode === 307 || statusCode === 308) && proxyRes.headers.location) {
+                                        let redirectUrl = proxyRes.headers.location;
+                                        if (!redirectUrl.startsWith('http://') && !redirectUrl.startsWith('https://')) {
+                                            redirectUrl = new URL(redirectUrl, urlStr).toString();
+                                        }
+                                        fetchWithRedirects(redirectUrl, depth + 1);
+                                        return;
+                                    }
+
+                                    const contentType = proxyRes.headers['content-type'] || 'image/png';
+                                    
+                                    if (!callback && responseType !== 'text') {
+                                        res.writeHead(statusCode, {
+                                            'Content-Type': contentType,
+                                            'Access-Control-Allow-Origin': '*',
+                                            'Cache-Control': 'no-cache'
+                                        });
+                                        proxyRes.pipe(res);
+                                        return;
+                                    }
+
+                                    const chunks: any[] = [];
+                                    proxyRes.on('data', (chunk: any) => {
+                                        chunks.push(chunk);
+                                    });
+                                    proxyRes.on('end', () => {
+                                        const buffer = Buffer.concat(chunks);
+                                        const base64 = buffer.toString('base64');
+                                        const dataUri = `data:${contentType};base64,${base64}`;
+
+                                        if (callback) {
+                                            res.writeHead(200, {
+                                                'Content-Type': 'application/javascript',
+                                                'Access-Control-Allow-Origin': '*'
+                                            });
+                                            res.end(`${callback}(${JSON.stringify(dataUri)})`);
+                                        } else {
+                                            res.writeHead(200, {
+                                                'Content-Type': 'text/plain',
+                                                'Access-Control-Allow-Origin': '*'
+                                            });
+                                            res.end(dataUri);
+                                        }
+                                    });
+                                });
+
+                                proxyReq.on('error', (err: any) => {
+                                    res.writeHead(500, { 'Content-Type': 'text/plain' });
+                                    res.end('Proxy fetch error: ' + String(err));
+                                });
+                            } catch (err) {
+                                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                                res.end('Proxy URL error: ' + String(err));
+                            }
+                        };
+
+                        fetchWithRedirects(targetUrlStr);
+                        return;
+                    }
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'text/plain' });
+                    res.end('Invalid proxy request: ' + String(e));
+                    return;
+                }
+            }
+
+            if (req.url === '/vpp-html2canvas.js' && extensionPath) {
+                let filePath = path.join(extensionPath, 'node_modules', 'html2canvas-pro', 'dist', 'html2canvas-pro.min.js');
+                if (!fs.existsSync(filePath)) {
+                    filePath = path.join(extensionPath, 'resources', 'html2canvas-pro.min.js');
+                }
+                if (fs.existsSync(filePath)) {
+                    res.writeHead(200, { 'Content-Type': 'application/javascript' });
+                    fs.createReadStream(filePath).pipe(res);
+                    return;
+                } else {
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end('html2canvas.min.js not found');
+                    return;
+                }
+            }
+
             const headers = { ...req.headers };
             headers['host'] = `localhost:${targetPort}`;
             // Disable compression so we can safely inject the postMessage navigation helper script
@@ -115,6 +232,61 @@ export function createProxyServer(targetPort: number, port: number = 0): Promise
       }
     });
 
+    // 1b. Screenshot capturing handler
+    function injectHtml2Canvas() {
+        if (window.html2canvas) return;
+        const script = document.createElement('script');
+        script.src = '/vpp-html2canvas.js';
+        script.id = 'vpp-html2canvas-script';
+        document.head.appendChild(script);
+    }
+    if (document.head) {
+        injectHtml2Canvas();
+    } else {
+        window.addEventListener('DOMContentLoaded', injectHtml2Canvas);
+    }
+
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'vpp-request-screenshot') {
+            if (!window.html2canvas) {
+                injectHtml2Canvas();
+                window.parent.postMessage({ type: 'vpp-screenshot-error', error: 'Screenshot library (html2canvas) is still loading. Please try again.' }, '*');
+                return;
+            }
+            var width = window.innerWidth;
+            var height = window.innerHeight;
+            var scrollX = window.scrollX || window.pageXOffset || 0;
+            var scrollY = window.scrollY || window.pageYOffset || 0;
+
+            window.html2canvas(document.documentElement, {
+                useCORS: true,
+                allowTaint: false,
+                imageTimeout: 5000,
+                logging: false,
+                proxy: '/vpp-image-proxy',
+                backgroundColor: null,
+                scale: window.devicePixelRatio || 2,
+                width: width,
+                height: height,
+                scrollX: scrollX,
+                scrollY: scrollY,
+                windowWidth: width,
+                windowHeight: height,
+                x: scrollX,
+                y: scrollY
+            }).then(function(canvas) {
+                try {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    window.parent.postMessage({ type: 'vpp-screenshot-data', dataUrl: dataUrl }, '*');
+                } catch(err) {
+                    window.parent.postMessage({ type: 'vpp-screenshot-error', error: 'Failed to export image: ' + String(err) }, '*');
+                }
+            }).catch(function(err) {
+                window.parent.postMessage({ type: 'vpp-screenshot-error', error: String(err) }, '*');
+            });
+        }
+    });
+
     // 2. Background color syncing handler
     function syncBackgroundWithParent() {
         function sendBgColor() {
@@ -148,17 +320,61 @@ export function createProxyServer(targetPort: number, port: number = 0): Promise
             } catch (e) {}
         }
 
+        let transitionTimeout = null;
+        let transitionInterval = null;
+
+        function startTransitionSync() {
+            if (transitionInterval) clearInterval(transitionInterval);
+            if (transitionTimeout) clearTimeout(transitionTimeout);
+
+            // Poll very fast (every 30ms) for 1000ms to catch CSS transitions smoothly
+            transitionInterval = setInterval(sendBgColor, 30);
+            transitionTimeout = setTimeout(() => {
+                clearInterval(transitionInterval);
+                transitionInterval = null;
+            }, 1000);
+        }
+
         sendBgColor();
-        window.addEventListener('DOMContentLoaded', sendBgColor);
-        window.addEventListener('load', sendBgColor);
-        setInterval(sendBgColor, 500);
+        window.addEventListener('DOMContentLoaded', function() {
+            sendBgColor();
+            startTransitionSync();
+        });
+        window.addEventListener('load', function() {
+            sendBgColor();
+            startTransitionSync();
+        });
+        setInterval(sendBgColor, 2000); // Low-frequency fallback
 
         try {
-            const observer = new MutationObserver(sendBgColor);
-            if (document.body) {
-                observer.observe(document.body, { attributes: true, attributeFilter: ['style', 'class'] });
-            }
-            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+            const observer = new MutationObserver(function(mutations) {
+                var shouldSync = false;
+                for (var i = 0; i < mutations.length; i++) {
+                    var m = mutations[i];
+                    if (m.type === 'attributes') {
+                        var target = m.target;
+                        if (target === document.body || target === document.documentElement || target.tagName === 'DIV' || target.tagName === 'MAIN') {
+                            shouldSync = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSync) {
+                    sendBgColor();
+                    startTransitionSync();
+                }
+            });
+            observer.observe(document.documentElement, { attributes: true, subtree: true });
+
+            window.addEventListener('transitionstart', function(e) {
+                var target = e.target;
+                if (target && (target === document.body || target === document.documentElement || target.tagName === 'DIV' || target.tagName === 'MAIN')) {
+                    if (e.propertyName && (e.propertyName.indexOf('background') !== -1 || e.propertyName.indexOf('color') !== -1)) {
+                        sendBgColor();
+                        startTransitionSync();
+                    }
+                }
+            });
         } catch (e) {}
     }
 

@@ -6,6 +6,26 @@
 > If you encounter an issue or have a suggestion, please open an issue or submit a pull request on [GitHub](https://github.com/christliebdela/webframe-pro). Your feedback and contributions are always appreciated.
 
 
+## 0.0.4
+
+### Added
+- **Mobile Simulator Screenshot Features**:
+  - Implemented high-resolution "Screen Only" and "Device + Screen" (Mockup) captures.
+  - Mockups automatically bundle the active viewport screen content, device chassis bezel, status bar info, and home gesture indicators.
+  - Proposes a native VS Code file save dialog with default file names prefilled containing the project name, active device name, and a unique 6-digit random number.
+- **Auto-Dismissing Saved Notifications**: Integrated auto-closing notification toasts (`withProgress`) that automatically dismiss and slide away after 3 seconds, keeping the VS Code workspace clutter-free.
+- **Node-Based CORS Image Proxy**: Added a local proxy endpoint `/vpp-image-proxy` to download cross-origin images on behalf of the client, resolving blank space rendering issues on third-party profile pictures/avatars. Ignores TLS unauthorized certificate errors for dev servers and handles HTTP redirects recursively.
+
+### Changed & Improved
+- **html2canvas-pro Integration**: Replaced standard `html2canvas` with `html2canvas-pro` to resolve layout issues with modern CSS features (flexbox, grid) and custom font scaling.
+- **Simulator Canvas Blending**: Offset and scaled page content screenshots on the mockup canvas to sit below the status bar (matching the simulator preview), preventing webpage headers and buttons from being hidden.
+
+### Fixed
+- **Canvas Taint & Corrupt Exports**: Swapped svg data-URI rendering for direct Canvas 2D vector path rendering (`Path2D` and `roundRect`) for bezel frames and overlays, preventing browser security taint and fixing corrupt 0-byte image exports.
+- **Bezel Overflow Clipping**: Added a native `ctx.clip()` mask inside the rounded viewport coordinates to clip webpage backgrounds and status bars, preventing white blocks from bleeding out at the corners of rounded iPhone and Android bezel frames.
+- **Zero-Width Canvas Crash**: Fixed a layout query bug where computed style dimensions were queried on the document root instead of `#device-container`, resolving a crash when creating mockup screenshots.
+- **Theme Toggle Dual Tooltip**: Removed browser `title` properties and migrated to `data-tooltip` to prevent duplicate system/custom tooltips on the theme toggle button.
+
 ## 0.0.3
 
 ### Added

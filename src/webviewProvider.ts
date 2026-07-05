@@ -98,7 +98,7 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
             return this._proxyCache.get(targetPort)!;
         }
         const freePort = await findFreePortInRange(49611, PRE_MAPPED_END);
-        const proxy = await createProxyServer(targetPort, freePort);
+        const proxy = await createProxyServer(targetPort, freePort, this._extensionUri.fsPath);
         this._proxyCache.set(targetPort, proxy);
         // Also ensure the proxy's own port is mapped through the webview
         this._ensurePortMapped(proxy.port);
@@ -288,6 +288,14 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
                     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
                     break;
                 }
+                case 'saveScreenshot': {
+                    const dataUrl = data.dataUrl;
+                    const deviceName = data.deviceName;
+                    if (dataUrl) {
+                        await this._saveScreenshotToFile(dataUrl, deviceName);
+                    }
+                    break;
+                }
             }
         });
 
@@ -339,6 +347,9 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
         const logoUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'resources', 'logo.png')
         );
+        const html2canvasUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'resources', 'html2canvas-pro.min.js')
+        );
         
         // Generate nonce
         const nonce = getNonce();
@@ -388,6 +399,7 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
         html = html
             .replace(/\${styleUri}/g, styleUri.toString())
             .replace(/\${logoUri}/g, logoUri.toString())
+            .replace(/\${html2canvasUri}/g, html2canvasUri.toString())
             .replace(/\${nonce}/g, nonce)
             .replace(/\${deviceOptions}/g, deviceOptions)
             .replace(/\${deviceDataMap}/g, JSON.stringify(deviceDataMap))
@@ -426,6 +438,46 @@ export class WebFrameProSidebarProvider implements vscode.WebviewViewProvider {
             }
         } catch (e) {}
         return [];
+    }
+
+    private async _saveScreenshotToFile(dataUrl: string, deviceName?: string) {
+        const parts = dataUrl.split(',');
+        const base64Data = parts.length > 1 ? parts[1] : parts[0];
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        const projectName = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
+            ? vscode.workspace.workspaceFolders[0].name
+            : 'screenshot';
+        const suffix = deviceName ? ` - ${deviceName}` : '';
+        const fileName = `${projectName}${suffix} - ${randomNum}.png`;
+
+        const defaultUri = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
+            ? vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, fileName)
+            : undefined;
+
+        const fileUri = await vscode.window.showSaveDialog({
+            defaultUri,
+            filters: {
+                'Images': ['png']
+            },
+            title: 'Save Device Screenshot'
+        });
+
+        if (fileUri) {
+            try {
+                await vscode.workspace.fs.writeFile(fileUri, buffer);
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: `Screenshot saved to ${path.basename(fileUri.fsPath)}`,
+                    cancellable: false
+                }, () => {
+                    return new Promise<void>(resolve => setTimeout(resolve, 3000));
+                });
+            } catch (err) {
+                vscode.window.showErrorMessage(`Failed to save screenshot: ${String(err)}`);
+            }
+        }
     }
 }
 

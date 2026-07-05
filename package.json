@@ -2,7 +2,7 @@
   "name": "webframe-pro",
   "displayName": "WebFrame Pro",
   "description": "Real mobile device previews directly inside your IDE.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "ChristliebDela",
   "repository": {
     "type": "git",
@@ -52,6 +52,9 @@
     "lint": "eslint src --ext ts",
     "test": "vscode-test",
     "package:marketplace": "node scripts/build-marketplace.js"
+  },
+  "dependencies": {
+    "html2canvas-pro": "^1.5.8"
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",

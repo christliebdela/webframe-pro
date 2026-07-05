@@ -1546,3 +1546,15 @@ body.vscode-dark [data-device-theme="auto"] .device-overlay-screen {
     pointer-events: none !important;
     visibility: hidden !important;
 }
+
+/* Screenshot Dropdown Layout */
+#screenshot-dropdown {
+    position: relative;
+    display: inline-flex;
+}
+
+.camera-icon {
+    width: 10px;
+    height: 10px;
+    transition: color 0.2s ease;
+}
