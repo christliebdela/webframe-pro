@@ -9,7 +9,7 @@
 ## 0.0.6
 
 ### Fixed
-- **Zero-Config Supabase Auth Cookie Wiping**: Introduced a proxy server endpoint (`/vpp-clear-cookies`) and wired the client-side session error interceptor to trigger it. When a stale refresh token error is intercepted in the iframe browser console, the extension now automatically sends a Set-Cookie header to clear all `sb-` and `-auth-token` HttpOnly cookies for localhost. This breaks the server-side authentication request loop and resolves rate limits completely without modifying any of the guest application's code.
+- **Iframe Authentication Cookie Loop Fix**: Introduced a proxy server endpoint (`/vpp-clear-cookies`) and wired the client-side session error interceptor to trigger it. When a stale refresh token error is caught in the iframe browser console, the extension now automatically clears associated auth cookies (e.g. `sb-*` or `-auth-token`) for localhost. This breaks server-side authentication request loops and resolves rate limits completely without modifying guest application code.
 
 ## 0.0.5
 
@@ -24,8 +24,8 @@
 - **Status Bar Signal & Battery**: Wi-Fi upgraded to a crisp 3-arc + dot Apple-style SVG; cellular set to full bars; battery icon filled to 100%. Canvas mockup exporter synced to match.
 
 ### Fixed
-- **Supabase Refresh Token Race (Suppression)**: `console.error` and `unhandledrejection` interceptors now correctly extract message text from Error objects — previously `JSON.stringify(new AuthApiError(...))` returned `"{}"` (non-enumerable properties), silently bypassing the filter. Added `extractArgMsg()` which reads `.name` and `.message` directly.
-- **Supabase Session False-Clear**: Added `hasValidSupabaseSession()` to check `expires_at` before clearing `localStorage`. If a valid session exists, the `Refresh Token Not Found` error is now suppressed without touching storage — preventing logged-in users from being kicked out due to Supabase's token rotation race in React StrictMode.
+- **Auth Error Log Extraction**: `console.error` and `unhandledrejection` interceptors now correctly extract message text from Error objects — previously `JSON.stringify(new Error(...))` returned `"{}"` (due to non-enumerable properties), causing some console filters to silently bypass the filter. Added `extractArgMsg()` which reads `.name` and `.message` directly.
+- **Session Auto-Clear Race Fix**: Refined local storage auth session checking to verify expiration timestamps before clearing. If a valid session exists, temporary token rotation race warnings (e.g., from React StrictMode double-renders) are suppressed without touching storage — preventing active users from being logged out.
 
 ## 0.0.4
 
