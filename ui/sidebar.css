@@ -317,15 +317,25 @@ body.vscode-light .workbench {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 36px 10px 30px 10px;
+    padding: 72px 10px 30px 10px;
+}
+
+/* Workbench Header Wrapper */
+.workbench-header {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 100;
+    pointer-events: none;
 }
 
 /* Info Bar */
 .info-bar {
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
     background-color: var(--infobar-bg);
     border: 1px solid var(--infobar-border);
     backdrop-filter: blur(4px);
@@ -341,6 +351,131 @@ body.vscode-light .workbench {
     color: var(--infobar-color);
     pointer-events: auto; /* enable interactivity */
     white-space: nowrap;
+}
+
+/* Address Bar styling */
+.address-bar {
+    width: 100%;
+    max-width: 280px;
+    background-color: var(--infobar-bg);
+    border: 1px solid var(--infobar-border);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 12px;
+    padding: 3px 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    pointer-events: auto;
+    /* Collapse animation */
+    overflow: hidden;
+    max-height: 32px;
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+    transform-origin: top center;
+    transition: max-height 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.18s ease,
+                transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-top 0.22s ease;
+    margin-top: 0;
+}
+
+.address-bar.collapsed {
+    max-height: 0 !important;
+    opacity: 0 !important;
+    transform: scaleY(0.85) translateY(-4px) !important;
+    pointer-events: none !important;
+    margin-top: -6px !important;
+    border-width: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    box-shadow: none !important;
+}
+
+/* URL toggle button active state */
+#btn-toggle-urlbar.active {
+    color: var(--vscode-textLink-activeForeground, #3794ff) !important;
+    opacity: 1 !important;
+}
+
+.address-bar-btn {
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: var(--infobar-color);
+    opacity: 0.8;
+    transition: background 0.15s, opacity 0.15s;
+    padding: 0;
+}
+
+.address-bar-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+}
+
+body.vscode-light .address-bar-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.address-bar-btn svg {
+    width: 12px;
+    height: 12px;
+}
+
+.address-input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 2px 6px;
+    height: 20px;
+}
+
+body.vscode-light .address-input-wrapper {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.address-lock-icon {
+    width: 8px;
+    height: 8px;
+    color: #4caf50;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+#address-input {
+    border: none;
+    background: none;
+    outline: none;
+    font-size: 10px;
+    font-family: var(--vscode-editor-font-family, monospace);
+    color: var(--vscode-foreground);
+    width: 100%;
+    padding: 0;
+    height: 100%;
+}
+
+.address-bar-btn:disabled {
+    opacity: 0.25 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+#address-input:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
 }
 
 /* Custom Dropdown Container */
@@ -795,6 +930,7 @@ body.vscode-light [data-device-theme="auto"] .home-bar-pill {
     border-radius: calc(var(--status-bar-fs) * 0.03);
     transition: background-color 0.1s ease;
 }
+
 .bar-1 { height: 25%; }
 .bar-2 { height: 50%; }
 .bar-3 { height: 75%; }
@@ -823,7 +959,7 @@ body.vscode-light [data-device-theme="auto"] .home-bar-pill {
     transition: border-color 0.1s ease;
 }
 .battery-level {
-    width: 75%;
+    width: 100%;
     height: 100%;
     background-color: currentColor;
     border-radius: calc(var(--status-bar-fs) * 0.08);

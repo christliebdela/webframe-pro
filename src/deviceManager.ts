@@ -223,6 +223,19 @@ export const DEVICES: { [key: string]: DeviceMetadata } = {
         statusBarHeight: 0,
         statusBarPadding: 0,
         statusBarFontSize: 0
+    },
+    'macbook-pro-14': {
+        name: 'MacBook Pro 14-inch',
+        width: 1560,
+        height: 1054,
+        viewportX: 24,
+        viewportY: 24,
+        viewportWidth: 1512,
+        viewportHeight: 982,
+        borderRadius: 12,
+        statusBarHeight: 0,
+        statusBarPadding: 0,
+        statusBarFontSize: 0
     }
 };
 
@@ -391,6 +404,19 @@ function generateSVG(key: string, dev: DeviceMetadata): string {
         hardwareDetails += `
             <!-- Folding Hinge Line -->
             <line x1="${w / 2}" y1="${vy}" x2="${w / 2}" y2="${vy + vh}" stroke="#555557" stroke-width="1.5" stroke-dasharray="4 4" />
+        `;
+    } else if (key === 'macbook-pro-14') {
+        const notchW = 150;
+        const notchH = 24;
+        const notchX = (w - notchW) / 2;
+        const notchY = vy;
+        hardwareDetails += `
+            <!-- MacBook Notch -->
+            <path d="M ${notchX} ${notchY} h ${notchW} v 16 a 8 8 0 0 1 -8 8 h -${notchW - 16} a 8 8 0 0 1 -8 -8 Z" fill="#000000" />
+            <!-- Webcam -->
+            <circle cx="${w / 2}" cy="${notchY + 12}" r="3" fill="#111113" />
+            <!-- Camera Indicator LED -->
+            <circle cx="${w / 2 + 15}" cy="${notchY + 12}" r="1.5" fill="#00ff00" opacity="0.4" />
         `;
     }
 

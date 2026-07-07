@@ -223,6 +223,129 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
                         const scriptToInject = `
 <script id="viewport-pro-helper">
   (function() {
+    // 0. EARLIEST POSSIBLE: Suppress Supabase stale refresh token errors & clear stale session
+    try {
+      function isSupabaseRefreshTokenError(msg) {
+        return typeof msg === 'string' && msg.includes('Refresh Token Not Found');
+      }
+
+      // Only remove actual session tokens if they are genuinely expired.
+      // If the user just logged in, DO NOT clear — the error is just a
+      // Supabase refresh-token rotation race (e.g. React StrictMode double-invoke).
+      function hasValidSupabaseSession() {
+        try {
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (!key) continue;
+            if ((key.startsWith('sb-') || key.includes('supabase.auth.token')) &&
+                !key.includes('pkce') && !key.includes('code-verifier') &&
+                !key.includes('state') && !key.includes('nonce')) {
+              var raw = localStorage.getItem(key);
+              if (!raw) continue;
+              var val = JSON.parse(raw);
+              // Session token has expires_at (Unix seconds). If it's still in the future, session is valid.
+              var expiresAt = val && (val.expires_at || (val.session && val.session.expires_at));
+              if (expiresAt && (expiresAt * 1000) > Date.now()) return true;
+              // Also accept if access_token exists and expires_at is missing (older Supabase versions)
+              var hasToken = val && (val.access_token || (val.session && val.session.access_token));
+              if (hasToken && !expiresAt) return true;
+            }
+          }
+        } catch(e) { /* ignore parse errors */ }
+        return false;
+      }
+
+      function clearStaleSupabaseSession() {
+        // If there's already a valid session, this error is just a token rotation
+        // race condition — suppress it but DO NOT clear the session.
+        if (hasValidSupabaseSession()) return;
+        try {
+          var keysToRemove = [];
+          for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (!key) continue;
+            var isSessionKey = (key.startsWith('sb-') || key.includes('supabase.auth.token')) &&
+                               !key.includes('pkce') &&
+                               !key.includes('code-verifier') &&
+                               !key.includes('state') &&
+                               !key.includes('nonce');
+            if (isSessionKey) keysToRemove.push(key);
+          }
+          keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+          if (keysToRemove.length > 0) {
+            console.info('[WebFrame Pro] Cleared ' + keysToRemove.length + ' stale Supabase session key(s). Re-authenticate to continue.');
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      // Extract a loggable string from any console argument, including Error objects
+      // (JSON.stringify(new Error()) returns "{}" because Error props are non-enumerable)
+      function extractArgMsg(arg) {
+        if (typeof arg === 'string') return arg;
+        if (arg && typeof arg === 'object') {
+          // Error or Error subclass — pull message + name directly
+          if (typeof arg.message === 'string') return (arg.name || '') + ': ' + arg.message;
+          try { return JSON.stringify(arg); } catch(e) { return String(arg); }
+        }
+        return String(arg);
+      }
+
+      // Build a locked console.error patcher that Next.js CANNOT override
+      function makeLockedConsolePatch(originalFn) {
+        var _orig = originalFn;
+        var patched = function() {
+          var msg = '';
+          for (var i = 0; i < arguments.length; i++) {
+            msg += extractArgMsg(arguments[i]) + ' ';
+          }
+          if (isSupabaseRefreshTokenError(msg)) {
+            clearStaleSupabaseSession();
+            return;
+          }
+          _orig.apply(console, arguments);
+        };
+        return patched;
+      }
+
+      // Lock console.error so frameworks (Next.js) cannot re-patch it over us
+      var _patchedConsoleError = makeLockedConsolePatch(console.error);
+      try {
+        Object.defineProperty(console, 'error', {
+          get: function() { return _patchedConsoleError; },
+          set: function(fn) {
+            // If Next.js tries to replace console.error, wrap the new fn too
+            _patchedConsoleError = makeLockedConsolePatch(fn);
+          },
+          configurable: true
+        });
+      } catch(e) {
+        // Fallback if defineProperty is blocked
+        console.error = _patchedConsoleError;
+      }
+
+      // Capture-phase unhandledrejection — fires before Next.js bubble listeners
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event && event.reason) {
+          var msg = String(event.reason.message || event.reason);
+          if (isSupabaseRefreshTokenError(msg)) {
+            clearStaleSupabaseSession();
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }
+      }, true);
+
+      // window.onerror for synchronous throws
+      var _origOnError = window.onerror;
+      window.onerror = function(message) {
+        if (isSupabaseRefreshTokenError(String(message || ''))) {
+          return true; // suppress without clearing (won't be a stale token case)
+        }
+        return _origOnError ? _origOnError.apply(this, arguments) : false;
+      };
+    } catch(e) { /* ignore */ }
+
+
     // 1. Navigation history handler
     window.addEventListener('message', function(e) {
       if (e.data === 'viewport-pro-back') {
@@ -231,6 +354,41 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
         window.history.forward();
       }
     });
+
+    // 1a. URL change tracking
+    function notifyUrlChange() {
+      try {
+        window.parent.postMessage({
+          type: 'vpp-url-changed',
+          url: window.location.href,
+          path: window.location.pathname + window.location.search + window.location.hash
+        }, '*');
+      } catch (err) { /* silent fallback */ }
+    }
+
+    window.addEventListener('popstate', notifyUrlChange);
+    window.addEventListener('hashchange', notifyUrlChange);
+
+    try {
+      const originalPushState = history.pushState;
+      history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        notifyUrlChange();
+      };
+
+      const originalReplaceState = history.replaceState;
+      history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        notifyUrlChange();
+      };
+    } catch (e) { /* ignore security/compatibility block */ }
+
+    // Initial load sync
+    if (document.readyState === 'complete') {
+      notifyUrlChange();
+    } else {
+      window.addEventListener('load', notifyUrlChange);
+    }
 
     // 1b. Screenshot capturing handler
     function injectHtml2Canvas() {
@@ -399,79 +557,115 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
                 top: 50%; 
                 transform: translateY(-50%); 
                 width: 38px !important; 
-                height: 38px; 
+                height: 38px !important; 
                 border-radius: 19px !important; 
-                background: rgba(15, 15, 15, 0.65) !important; 
-                border: 1px solid rgba(255, 255, 255, 0.15) !important; 
-                backdrop-filter: blur(12px) !important; 
-                -webkit-backdrop-filter: blur(12px) !important; 
+                background: rgba(30, 30, 30, 0.75) !important; 
+                border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+                backdrop-filter: blur(20px) !important; 
+                -webkit-backdrop-filter: blur(20px) !important; 
                 color: #ffffff !important; 
-                display: flex !important; 
-                flex-direction: column !important; 
-                align-items: center !important; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; 
+                box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important; 
                 z-index: 2147483647 !important; 
-                transition: opacity 0.2s, transform 0.2s, background 0.2s, border-color 0.2s, height 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; 
-                opacity: 0.55 !important; 
+                transition: transform 0.2s, background 0.2s, border-color 0.2s, height 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.2s, left 0.2s !important; 
+                opacity: 1 !important; /* Keep container always frosted */
                 user-select: none !important; 
                 -webkit-user-select: none !important; 
                 overflow: hidden !important; 
                 padding: 0 !important; 
                 box-sizing: border-box !important; 
-            } 
-            #webframe-pro-floater:hover { 
-                opacity: 1 !important; 
-                background: rgba(10, 10, 10, 0.8) !important; 
-                border-color: rgba(255, 255, 255, 0.25) !important; 
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
             } 
             #webframe-pro-floater.vpp-expanded { 
-                height: 160px; 
+                height: 180px !important; 
             } 
-            #webframe-pro-floater button { 
-                width: 36px !important; 
-                height: 36px !important; 
+            #vpp-btn-trigger { 
+                width: 36px !important;
+                height: 36px !important;
+                border: none !important;
+                background: transparent !important;
+                cursor: pointer !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                margin: 0 !important;
+                flex-shrink: 0 !important;
+                z-index: 100 !important;
+                opacity: 0.55 !important;
+                transition: opacity 0.15s ease !important;
+            } 
+            #webframe-pro-floater:hover #vpp-btn-trigger,
+            #webframe-pro-floater.vpp-expanded #vpp-btn-trigger {
+                opacity: 1 !important;
+            }
+            .vpp-assistive-touch-circle {
+                width: 18px !important;
+                height: 18px !important;
+                border-radius: 50% !important;
+                background: rgba(255, 255, 255, 0.4) !important;
+                border: 2.5px solid rgba(255, 255, 255, 0.85) !important;
+                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15) !important;
+                transition: background 0.15s, transform 0.15s !important;
+            }
+            #webframe-pro-floater:hover .vpp-assistive-touch-circle {
+                background: rgba(255, 255, 255, 0.65) !important;
+                transform: scale(1.1) !important;
+            }
+            #webframe-pro-floater-actions { 
+                display: flex !important; 
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 4px !important;
+                padding: 0 0 4px 0 !important;
+                opacity: 0 !important; 
+                transition: opacity 0.2s !important; 
+                pointer-events: none !important; 
+                box-sizing: border-box !important;
+                width: 38px !important;
+                flex-shrink: 0 !important;
+            } 
+            #webframe-pro-floater.vpp-expanded #webframe-pro-floater-actions { 
+                opacity: 1 !important; 
+                pointer-events: auto !important; 
+            } 
+            .vpp-action-btn { 
+                width: 32px !important; 
+                height: 32px !important; 
                 border-radius: 50% !important; 
                 border: none !important; 
-                background: transparent !important; 
-                color: #e2e2e2 !important; 
+                background: rgba(255, 255, 255, 0.1) !important; 
+                color: #ffffff !important; 
                 cursor: pointer !important; 
                 display: flex !important; 
                 align-items: center !important; 
                 justify-content: center !important; 
                 outline: none !important; 
                 padding: 0 !important; 
-                transition: color 0.15s !important; 
-                flex-shrink: 0 !important; 
+                transition: background 0.15s, transform 0.15s, opacity 0.15s !important; 
                 box-sizing: border-box !important; 
+                opacity: 0.6 !important;
             } 
-            #webframe-pro-floater button svg {
+            .vpp-action-btn svg {
                 transition: transform 0.15s ease !important;
+                width: 14px !important;
+                height: 14px !important;
+                color: #ffffff !important;
             }
-            #webframe-pro-floater button:hover { 
-                background: transparent !important; 
-                color: #ffffff !important; 
-                } 
-            #webframe-pro-floater button:hover svg {
-                transform: scale(1.18) !important;
+            .vpp-action-btn:hover { 
+                background: rgba(255, 255, 255, 0.2) !important; 
+                transform: scale(1.1) !important; 
+                opacity: 1 !important;
+            } 
+            .vpp-action-btn:hover svg {
+                transform: scale(1.15) !important;
             }
-            #vpp-btn-trigger { 
-                margin: 0 !important; 
-            } 
-            #webframe-pro-floater-actions { 
-                display: flex !important; 
-                flex-direction: column !important; 
-                align-items: center !important; 
-                gap: 2px !important; 
-                opacity: 0 !important; 
-                transition: opacity 0.2s !important; 
-                pointer-events: none !important; 
-                margin-top: 4px !important; 
-                flex-shrink: 0 !important; 
-            } 
-            #webframe-pro-floater.vpp-expanded #webframe-pro-floater-actions { 
-                opacity: 1 !important; 
-                pointer-events: auto !important; 
-            } 
+            #webframe-pro-floater.vpp-expanded .vpp-action-btn {
+                opacity: 0.8 !important;
+            }
+            #webframe-pro-floater.vpp-expanded .vpp-action-btn:hover {
+                opacity: 1 !important;
+            }
         \`;
         const targetHead = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
         targetHead.appendChild(style);
@@ -479,18 +673,21 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
         const floater = document.createElement('div');
         floater.id = 'webframe-pro-floater';
         floater.innerHTML = \`
-            <button id="vpp-btn-trigger" title="Drag to reposition, Click to expand dev tools">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l-.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <button id="vpp-btn-trigger">
+                <div class="vpp-assistive-touch-circle"></div>
             </button>
             <div id="webframe-pro-floater-actions">
-                <button id="vpp-btn-back" title="Go Back">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <button id="vpp-btn-rotate" class="vpp-action-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12A8 8 0 0 1 12 4v4l5-5-5-5v4A10 10 0 0 0 2 12h2z"></path><rect x="8" y="10" width="10" height="12" rx="1"></rect></svg>
                 </button>
-                <button id="vpp-btn-forward" title="Go Forward">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <button id="vpp-btn-sleep" class="vpp-action-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
                 </button>
-                <button id="vpp-btn-reload" title="Reload Page">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                <button id="vpp-btn-screenshot" class="vpp-action-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </button>
+                <button id="vpp-btn-scroll-top" class="vpp-action-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
             </div>
         \`;
@@ -559,6 +756,7 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
 
         // Click handler on trigger button with drag separation
         triggerBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop propagation to prevent immediate click-outside closing
             if (hasDragged) {
                 e.preventDefault();
                 return;
@@ -566,17 +764,42 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
             floater.classList.toggle('vpp-expanded');
         });
 
-        document.getElementById('vpp-btn-back').addEventListener('click', () => {
-            window.history.back();
+        // Close AssistiveTouch menu when clicking outside
+        window.addEventListener('click', (e) => {
+            if (floater.classList.contains('vpp-expanded')) {
+                if (!floater.contains(e.target)) {
+                    floater.classList.remove('vpp-expanded');
+                }
+            }
         });
 
-        document.getElementById('vpp-btn-forward').addEventListener('click', () => {
-            window.history.forward();
+        document.getElementById('vpp-btn-rotate').addEventListener('click', (e) => {
+            e.stopPropagation();
+            try {
+                window.parent.postMessage({ type: 'vpp-trigger-orientation' }, '*');
+            } catch (err) { /* silent fail */ }
         });
 
-        document.getElementById('vpp-btn-reload').addEventListener('click', () => {
-            window.location.reload();
+        document.getElementById('vpp-btn-sleep').addEventListener('click', (e) => {
+            e.stopPropagation();
+            try {
+                window.parent.postMessage({ type: 'vpp-trigger-power' }, '*');
+            } catch (err) { /* silent fail */ }
         });
+
+        document.getElementById('vpp-btn-scroll-top').addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('vpp-btn-screenshot').addEventListener('click', (e) => {
+            e.stopPropagation();
+            try {
+                window.parent.postMessage({ type: 'vpp-trigger-screenshot' }, '*');
+            } catch (err) { /* silent fail */ }
+        });
+
+        // (Tooltip events removed to prevent hover overlay clashes)
 
         // Keep the floating controls in DOM even if wiped by React SPA transitions / Hot Module Replaces
         const observer = new MutationObserver(() => {

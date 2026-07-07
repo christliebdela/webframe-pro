@@ -2,7 +2,7 @@
   "name": "webframe-pro",
   "displayName": "WebFrame Pro",
   "description": "Real mobile device previews directly inside your IDE.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "ChristliebDela",
   "repository": {
     "type": "git",

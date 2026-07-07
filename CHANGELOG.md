@@ -6,6 +6,22 @@
 > If you encounter an issue or have a suggestion, please open an issue or submit a pull request on [GitHub](https://github.com/christliebdela/webframe-pro). Your feedback and contributions are always appreciated.
 
 
+## 0.0.5
+
+### Added
+- **Collapsible URL Bar**: The Address Bar is now hidden by default to preserve vertical editor space. A Globe icon in the main toolbar toggles it open. The bar auto-expands when a session starts and auto-collapses when stopped.
+- **Live Sub-route Navigation**: An interactive address bar below the toolbar shows the previewed app's active route in real time. Users can type custom paths (e.g. `/admin`, `/profile`) or full URLs and press Enter to navigate immediately.
+- **Full Navigation History Controls**: Back, Forward, and Refresh buttons with a smart history stack — Back/Forward are dynamically enabled/disabled based on position in history.
+- **MacBook Pro 14-inch Device**: New desktop viewport (`1512×982`) with a full bezel frame, accurate camera notch, webcam circle, and green status indicator LED rendered via client-side SVG generation.
+
+### Changed & Improved
+- **Reload Extension Icon**: Replaced the circular arrow (confused with browser refresh) with a Terminal-Chevron Refresh Loop icon — a refresh ring overlaid with a `>` terminal chevron — clearly signalling an extension backend reload.
+- **Status Bar Signal & Battery**: Wi-Fi upgraded to a crisp 3-arc + dot Apple-style SVG; cellular set to full bars; battery icon filled to 100%. Canvas mockup exporter synced to match.
+
+### Fixed
+- **Supabase Refresh Token Race (Suppression)**: `console.error` and `unhandledrejection` interceptors now correctly extract message text from Error objects — previously `JSON.stringify(new AuthApiError(...))` returned `"{}"` (non-enumerable properties), silently bypassing the filter. Added `extractArgMsg()` which reads `.name` and `.message` directly.
+- **Supabase Session False-Clear**: Added `hasValidSupabaseSession()` to check `expires_at` before clearing `localStorage`. If a valid session exists, the `Refresh Token Not Found` error is now suppressed without touching storage — preventing logged-in users from being kicked out due to Supabase's token rotation race in React StrictMode.
+
 ## 0.0.4
 
 ### Added
