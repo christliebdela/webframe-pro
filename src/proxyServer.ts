@@ -374,12 +374,14 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
     } catch(e) { /* ignore */ }
 
 
-    // 1. Navigation history handler
+    // 1. Navigation history and Session Reset handler
     window.addEventListener('message', function(e) {
       if (e.data === 'viewport-pro-back') {
         window.history.back();
       } else if (e.data === 'viewport-pro-forward') {
         window.history.forward();
+      } else if (e.data && e.data.type === 'vpp-clear-session') {
+        clearStaleSupabaseSession();
       }
     });
 

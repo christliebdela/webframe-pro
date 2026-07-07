@@ -1233,7 +1233,15 @@
 
             // Reload extension completely and clear configurations
             refreshPreviewBtn.addEventListener('click', () => {
-                vscode.postMessage({ type: 'clearConfig' });
+                try {
+                    const iframe = document.getElementById('device-viewport');
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage({ type: 'vpp-clear-session' }, '*');
+                    }
+                } catch (e) {}
+                setTimeout(() => {
+                    vscode.postMessage({ type: 'clearConfig' });
+                }, 150);
             });
 
             // Toggle screen power
