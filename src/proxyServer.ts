@@ -120,6 +120,28 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
                     return;
                 }
             }
+            if (req.url && req.url.startsWith('/vpp-clear-cookies')) {
+                const responseHeaders: Record<string, string | string[]> = {
+                    'Content-Type': 'text/plain',
+                    'Access-Control-Allow-Origin': '*',
+                    'Cache-Control': 'no-cache'
+                };
+                const requestCookies = req.headers.cookie || '';
+                const cookiesToClear: string[] = [];
+                requestCookies.split(';').forEach(c => {
+                    const parts = c.trim().split('=');
+                    const name = parts[0];
+                    if (name && (name.startsWith('sb-') || name.includes('-auth-token'))) {
+                        cookiesToClear.push(`${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`);
+                    }
+                });
+                if (cookiesToClear.length > 0) {
+                    responseHeaders['Set-Cookie'] = cookiesToClear;
+                }
+                res.writeHead(200, responseHeaders);
+                res.end('Cookies cleared');
+                return;
+            }
 
             if (req.url === '/vpp-html2canvas.js' && extensionPath) {
                 let filePath = path.join(extensionPath, 'node_modules', 'html2canvas-pro', 'dist', 'html2canvas-pro.min.js');
@@ -259,6 +281,12 @@ export function createProxyServer(targetPort: number, port: number = 0, extensio
         // If there's already a valid session, this error is just a token rotation
         // race condition — suppress it but DO NOT clear the session.
         if (hasValidSupabaseSession()) return;
+        
+        // Trigger server-side HTTP cookie clearing for localhost in the iframe context
+        try {
+          fetch('/vpp-clear-cookies').catch(function() {});
+        } catch(e) {}
+
         try {
           var keysToRemove = [];
           for (var i = 0; i < localStorage.length; i++) {

@@ -6,6 +6,11 @@
 > If you encounter an issue or have a suggestion, please open an issue or submit a pull request on [GitHub](https://github.com/christliebdela/webframe-pro). Your feedback and contributions are always appreciated.
 
 
+## 0.0.6
+
+### Fixed
+- **Zero-Config Supabase Auth Cookie Wiping**: Introduced a proxy server endpoint (`/vpp-clear-cookies`) and wired the client-side session error interceptor to trigger it. When a stale refresh token error is intercepted in the iframe browser console, the extension now automatically sends a Set-Cookie header to clear all `sb-` and `-auth-token` HttpOnly cookies for localhost. This breaks the server-side authentication request loop and resolves rate limits completely without modifying any of the guest application's code.
+
 ## 0.0.5
 
 ### Added
